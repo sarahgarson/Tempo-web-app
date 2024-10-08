@@ -13,21 +13,27 @@ const Login: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      const response = await axios.post('http://localhost:5003/api/auth/login', { email, password });
       localStorage.setItem('token', response.data.token);
-      navigate('/employee-schedule');
+      localStorage.setItem('role', response.data.role);
+      if (response.data.role === 'employee') {
+        navigate('/employee-schedule');
+      } else {
+        navigate('/manager-schedule');
+      }
     } catch (error) {
       console.error('Login failed:', error);
+      // Handle error (e.g., show error message to user)
     }
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:5000/api/auth/google';
+    window.location.href = 'http://localhost:5003/api/auth/google';
   };
 
   return (
     <Container maxWidth="xs" className="login-container">
-      <Typography variant="h3" className="login-title">Shift Scheduling App</Typography>
+      <Typography variant="h4" className="login-title">Login</Typography>
       <form onSubmit={handleLogin} className="login-form">
         <TextField
           label="Email"
@@ -46,12 +52,13 @@ const Login: React.FC = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <Button type="submit" variant="contained" color="secondary" fullWidth className="login-button">
+        <Button type="submit" variant="contained" color="primary" fullWidth className="login-button">
           Login
         </Button>
       </form>
       <Button
         variant="contained"
+        color="secondary"
         fullWidth
         startIcon={<GoogleIcon />}
         onClick={handleGoogleLogin}

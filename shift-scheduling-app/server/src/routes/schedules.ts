@@ -1,12 +1,13 @@
-import express from 'express';
+import express, { Response, NextFunction, Request } from 'express';
 import { pool } from '../config/database';
 import { authenticateToken } from '../middleware/auth';
 import { AuthenticatedRequest } from '../types';
 
 const router = express.Router();
 
-router.get('/availability', authenticateToken, async (req: AuthenticatedRequest, res) => {
-  const { userId } = req.user!;
+router.get('/availability', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
+  const authenticatedReq = req as AuthenticatedRequest;
+  const { userId } = authenticatedReq.user;
   const { week } = req.query;
 
   try {
@@ -18,8 +19,9 @@ router.get('/availability', authenticateToken, async (req: AuthenticatedRequest,
   }
 });
 
-router.post('/availability', authenticateToken, async (req: AuthenticatedRequest, res) => {
-  const { userId } = req.user!;
+router.post('/availability', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
+  const authenticatedReq = req as AuthenticatedRequest;
+  const { userId } = authenticatedReq.user;
   const { availability, week } = req.body;
 
   try {
@@ -35,3 +37,4 @@ router.post('/availability', authenticateToken, async (req: AuthenticatedRequest
 });
 
 export default router;
+

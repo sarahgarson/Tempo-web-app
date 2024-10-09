@@ -5,10 +5,12 @@ import { Google as GoogleIcon } from '@mui/icons-material';
 import axios from 'axios';
 import '../styles/Login.css';
 
+
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,9 +29,11 @@ const Login: React.FC = () => {
     }
   };
 
+
   const handleGoogleLogin = () => {
     window.location.href = 'http://localhost:5003/api/auth/google';
   };
+
 
   return (
     <Container maxWidth="xs" className="login-container">
@@ -70,4 +74,6 @@ const Login: React.FC = () => {
   );
 };
 
+
 export default Login;
+

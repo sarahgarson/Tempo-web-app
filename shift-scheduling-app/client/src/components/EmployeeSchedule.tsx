@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../redux/store';
 import { setAvailability } from '../redux/actions';
@@ -11,13 +11,9 @@ const EmployeeSchedule: React.FC = () => {
   const availability = useSelector((state: RootState) => state.availability);
   const [currentWeek, setCurrentWeek] = useState(new Date());
 
-  useEffect(() => {
-    fetchAvailability();
-  }, [currentWeek]);
-
-  const fetchAvailability = async () => {
+  const fetchAvailability = useCallback(async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/schedules/availability', {
+      const response = await axios.get('http://localhost:5003/api/schedules/availability', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         params: { week: currentWeek.toISOString() },
       });
@@ -25,7 +21,11 @@ const EmployeeSchedule: React.FC = () => {
     } catch (error) {
       console.error('Failed to fetch availability:', error);
     }
-  };
+  }, [currentWeek, dispatch]);
+
+  useEffect(() => {
+    fetchAvailability();
+  }, [fetchAvailability]);
 
   const handleAvailabilityChange = (day: string, shift: string) => {
     const newAvailability = { ...availability };
@@ -38,7 +38,7 @@ const EmployeeSchedule: React.FC = () => {
 
   const saveAvailability = async () => {
     try {
-      await axios.post('http://localhost:5000/api/schedules/availability', 
+      await axios.post('http://localhost:5003/api/schedules/availability', 
         { availability, week: currentWeek.toISOString() },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );

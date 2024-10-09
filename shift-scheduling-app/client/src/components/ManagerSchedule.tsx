@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import axios from 'axios';
 import '../styles/ManagerSchedule.css';
@@ -14,13 +14,9 @@ const ManagerSchedule: React.FC = () => {
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
   const [currentWeek, setCurrentWeek] = useState(new Date());
 
-  useEffect(() => {
-    fetchScheduleOptions();
-  }, [currentWeek]);
-
-  const fetchScheduleOptions = async () => {
+  const fetchScheduleOptions = useCallback(async () => {
     try {
-      const response = await axios.get<Schedule[]>('http://localhost:5000/api/schedules/options', {
+      const response = await axios.get<Schedule[]>('/api/schedules/options', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         params: { week: currentWeek.toISOString() },
       });
@@ -28,7 +24,11 @@ const ManagerSchedule: React.FC = () => {
     } catch (error) {
       console.error('Failed to fetch schedule options:', error);
     }
-  };
+  }, [currentWeek]);
+
+  useEffect(() => {
+    fetchScheduleOptions();
+  }, [fetchScheduleOptions]);
 
   const selectSchedule = (schedule: Schedule) => {
     setSelectedSchedule(schedule);
@@ -38,7 +38,7 @@ const ManagerSchedule: React.FC = () => {
     if (!selectedSchedule) return;
 
     try {
-      await axios.post('http://localhost:5000/api/schedules/select', 
+      await axios.post('/api/schedules/select', 
         { schedule: selectedSchedule, week: currentWeek.toISOString() },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );

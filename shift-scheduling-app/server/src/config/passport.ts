@@ -1,10 +1,12 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import { pool } from './database';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Google Strategy
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
@@ -12,7 +14,7 @@ passport.use(new GoogleStrategy({
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
-      // Check if user already exists in your database
+      // Checking if user already exists in your database
       const result = await pool.query('SELECT * FROM users WHERE google_id = $1', [profile.id]);
       
       if (result.rows.length > 0) {
@@ -31,6 +33,27 @@ passport.use(new GoogleStrategy({
     }
   }
 ));
+
+// JWT Strategy
+const jwtOptions = {
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  secretOrKey: process.env.JWT_SECRET as string,
+};
+
+passport.use(new JwtStrategy(jwtOptions, async (jwt_payload, done) => {
+  try {
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [jwt_payload.userId]);
+    const user = result.rows[0];
+
+    if (user) {
+      return done(null, user);
+    } else {
+      return done(null, false);
+    }
+  } catch (error) {
+    return done(error, false);
+  }
+}));
 
 passport.serializeUser((user: any, done) => {
   done(null, user.id);

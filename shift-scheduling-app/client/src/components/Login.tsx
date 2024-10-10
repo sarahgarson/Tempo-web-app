@@ -37,7 +37,7 @@ const Login: React.FC = () => {
 
   return (
     <Container maxWidth="xs" className="login-container">
-      <Typography variant="h4" className="login-title">Login</Typography>
+      <Typography variant="h4" className="login-title">Scheduling Shifts Login</Typography>
       <form onSubmit={handleLogin} className="login-form">
         <TextField
           label="Email"

@@ -1,9 +1,11 @@
 import express, { Response, NextFunction, Request } from 'express';
+import passport from '../config/passport';
 import { pool } from '../config/database';
 import { authenticateToken } from '../middleware/auth';
 import { AuthenticatedRequest } from '../types';
 
 const router = express.Router();
+router.use(passport.authenticate('jwt', { session: false }));
 
 router.get('/availability', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
   const authenticatedReq = req as AuthenticatedRequest;

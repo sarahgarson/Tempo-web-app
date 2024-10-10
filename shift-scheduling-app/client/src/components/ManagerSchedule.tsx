@@ -15,20 +15,21 @@ const ManagerSchedule: React.FC = () => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
 
   useEffect(() => {
+    const fetchScheduleOptions = async () => {
+      try {
+        const response = await axios.get<Schedule[]>('http://localhost:5003/api/schedules/options', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          params: { week: currentWeek.toISOString() },
+        });
+        setScheduleOptions(response.data);
+      } catch (error) {
+        console.error('Failed to fetch schedule options:', error);
+      }
+    };
+  
     fetchScheduleOptions();
   }, [currentWeek]);
-
-  const fetchScheduleOptions = async () => {
-    try {
-      const response = await axios.get<Schedule[]>('http://localhost:5000/api/schedules/options', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        params: { week: currentWeek.toISOString() },
-      });
-      setScheduleOptions(response.data);
-    } catch (error) {
-      console.error('Failed to fetch schedule options:', error);
-    }
-  };
+  
 
   const selectSchedule = (schedule: Schedule) => {
     setSelectedSchedule(schedule);
@@ -38,7 +39,7 @@ const ManagerSchedule: React.FC = () => {
     if (!selectedSchedule) return;
 
     try {
-      await axios.post('http://localhost:5000/api/schedules/select', 
+      await axios.post('http://localhost:5003/api/schedules/select', 
         { schedule: selectedSchedule, week: currentWeek.toISOString() },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );

@@ -12,20 +12,21 @@ const EmployeeSchedule: React.FC = () => {
   const [currentWeek, setCurrentWeek] = useState(new Date());
 
   useEffect(() => {
+    const fetchAvailability = async () => {
+      try {
+        const response = await axios.get('http://localhost:5003/api/schedules/availability', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          params: { week: currentWeek.toISOString() },
+        });
+        dispatch(setAvailability(response.data));
+      } catch (error) {
+        console.error('Failed to fetch availability:', error);
+      }
+    };
+  
     fetchAvailability();
-  }, [currentWeek]);
-
-  const fetchAvailability = async () => {
-    try {
-      const response = await axios.get('http://localhost:5000/api/schedules/availability', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        params: { week: currentWeek.toISOString() },
-      });
-      dispatch(setAvailability(response.data));
-    } catch (error) {
-      console.error('Failed to fetch availability:', error);
-    }
-  };
+  }, [currentWeek, dispatch]);
+  
 
   const handleAvailabilityChange = (day: string, shift: string) => {
     const newAvailability = { ...availability };
@@ -38,7 +39,7 @@ const EmployeeSchedule: React.FC = () => {
 
   const saveAvailability = async () => {
     try {
-      await axios.post('http://localhost:5000/api/schedules/availability', 
+      await axios.post('http://localhost:5003/api/schedules/availability', 
         { availability, week: currentWeek.toISOString() },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );

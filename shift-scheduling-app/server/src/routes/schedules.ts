@@ -56,5 +56,56 @@ router.post('/availability', authenticateToken, async (req: Request, res: Respon
   }
 });
 
+router.get('/manager-options', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
+  const { week } = req.query;
+
+  try {
+    // Fetch employee availability
+    const availabilityResult = await pool.query(
+      'SELECT user_id, day_of_week, start_time, end_time, status FROM availability WHERE week = $1',
+      [week]
+    );
+
+    // Process availability data
+    const employeeAvailability: any = {};
+    availabilityResult.rows.forEach((row) => {
+      const { user_id, day_of_week, start_time, end_time, status } = row;
+      if (!employeeAvailability[day_of_week]) {
+        employeeAvailability[day_of_week] = {};
+      }
+      const shift = `${start_time}-${end_time}`;
+      if (!employeeAvailability[day_of_week][shift]) {
+        employeeAvailability[day_of_week][shift] = [];
+      }
+      if (status === 'available') {
+        employeeAvailability[day_of_week][shift].push(user_id);
+      }
+    });
+
+    // Generate schedule options (this is a simplified version, you may want to implement a more sophisticated algorithm)
+    const scheduleOptions = [
+      generateScheduleOption(employeeAvailability),
+      generateScheduleOption(employeeAvailability)
+    ];
+
+    res.json({ scheduleOptions, employeeAvailability });
+  } catch (error) {
+    console.error('Fetch manager options error:', error);
+    res.status(500).json({ message: 'Server error', error: (error as Error).message });
+  }
+});
+
+function generateScheduleOption(employeeAvailability: any) {
+  const schedule: any = {};
+  for (const day in employeeAvailability) {
+    schedule[day] = {};
+    for (const shift in employeeAvailability[day]) {
+      const availableEmployees = employeeAvailability[day][shift];
+      schedule[day][shift] = availableEmployees.length > 0 ? availableEmployees[Math.floor(Math.random() * availableEmployees.length)] : '-';
+    }
+  }
+  return schedule;
+}
+
 export default router;
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TextField } from '@mui/material';
 import axios from 'axios';
 import '../styles/ManagerSchedule.css';
 
@@ -9,44 +9,66 @@ interface Schedule {
   };
 }
 
+interface EmployeeAvailability {
+  [day: string]: {
+    [shift: string]: string[];
+  };
+}
+
 const ManagerSchedule: React.FC = () => {
   const [scheduleOptions, setScheduleOptions] = useState<Schedule[]>([]);
   const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
+  const [customSchedule, setCustomSchedule] = useState<Schedule>({});
+  const [employeeAvailability, setEmployeeAvailability] = useState<EmployeeAvailability>({});
   const [currentWeek, setCurrentWeek] = useState(new Date());
+  const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
     const fetchScheduleOptions = async () => {
       try {
-        const response = await axios.get<Schedule[]>('http://localhost:5003/api/schedules/options', {
+        const response = await axios.get<{ scheduleOptions: Schedule[], employeeAvailability: EmployeeAvailability }>('http://localhost:5003/api/schedules/manager-options', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
           params: { week: currentWeek.toISOString() },
         });
-        setScheduleOptions(response.data);
+        setScheduleOptions(response.data.scheduleOptions);
+        setEmployeeAvailability(response.data.employeeAvailability);
       } catch (error) {
         console.error('Failed to fetch schedule options:', error);
       }
     };
-  
+
     fetchScheduleOptions();
   }, [currentWeek]);
-  
 
   const selectSchedule = (schedule: Schedule) => {
     setSelectedSchedule(schedule);
+    setCustomSchedule(schedule);
   };
 
   const saveSchedule = async () => {
-    if (!selectedSchedule) return;
-
     try {
       await axios.post('http://localhost:5003/api/schedules/select', 
-        { schedule: selectedSchedule, week: currentWeek.toISOString() },
+        { schedule: customSchedule, week: currentWeek.toISOString() },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
       alert('Schedule saved and sent to employees!');
+      setEditMode(false);
     } catch (error) {
       console.error('Failed to save schedule:', error);
     }
+  };
+
+  const handleCustomScheduleChange = (day: string, shift: string, value: string) => {
+    if (!employeeAvailability[day][shift].includes(value)) {
+      alert(`Warning: ${value} is not available for this shift!`);
+    }
+    setCustomSchedule(prev => ({
+      ...prev,
+      [day]: {
+        ...prev[day],
+        [shift]: value
+      }
+    }));
   };
 
   const shifts = ['7:00-16:00', '10:00-19:00', '13:00-22:00'];
@@ -95,41 +117,65 @@ const ManagerSchedule: React.FC = () => {
           </div>
         ))}
       </div>
-      {selectedSchedule && (
-        <div className="selected-schedule">
-          <h2>Selected Schedule</h2>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Day</TableCell>
+      <div className="custom-schedule">
+        <h2>Custom Schedule</h2>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Day</TableCell>
+                {shifts.map((shift) => (
+                  <TableCell key={shift}>{shift}</TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {days.map((day) => (
+                <TableRow key={day}>
+                  <TableCell>{day}</TableCell>
                   {shifts.map((shift) => (
-                    <TableCell key={shift}>{shift}</TableCell>
+                    <TableCell key={`${day}-${shift}`}>
+                      {editMode ? (
+                        <TextField
+                          value={customSchedule[day]?.[shift] || ''}
+                          onChange={(e) => handleCustomScheduleChange(day, shift, e.target.value)}
+                        />
+                      ) : (
+                        customSchedule[day]?.[shift] || '-'
+                      )}
+                    </TableCell>
                   ))}
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {days.map((day) => (
-                  <TableRow key={day}>
-                    <TableCell>{day}</TableCell>
-                    {shifts.map((shift) => (
-                      <TableCell key={`${day}-${shift}`}>
-                        {selectedSchedule[day]?.[shift] || '-'}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <Button variant="contained" color="primary" onClick={saveSchedule} className="save-button">
-            Save and Send Schedule
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <Button variant="contained" color="primary" onClick={() => setEditMode(!editMode)}>
+          {editMode ? 'Cancel Edit' : 'Edit Schedule'}
+        </Button>
+        {editMode && (
+          <Button variant="contained" color="secondary" onClick={saveSchedule}>
+            Save Custom Schedule
           </Button>
-        </div>
-      )}
+        )}
+      </div>
+      <div className="employee-availability">
+        <h2>Employee Availability</h2>
+        {days.map((day) => (
+          <div key={day}>
+            <h3>{day}</h3>
+            {shifts.map((shift) => (
+              <p key={`${day}-${shift}`}>
+                {shift}: {employeeAvailability[day]?.[shift]?.join(', ') || 'No employees available'}
+              </p>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
 
 export default ManagerSchedule;
+
 

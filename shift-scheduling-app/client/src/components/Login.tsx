@@ -5,19 +5,23 @@ import { Google as GoogleIcon } from '@mui/icons-material';
 import axios from 'axios';
 import '../styles/Login.css';
 
-
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const response = await axios.post('http://localhost:5003/api/auth/login', { email, password });
+      
+      // Store the token in localStorage (already implemented)
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('role', response.data.role);
+
+      // Log the token for debugging purposes
+      console.log('Token stored:', response.data.token);
+
       if (response.data.role === 'employee') {
         navigate('/employee-schedule');
       } else {
@@ -26,14 +30,13 @@ const Login: React.FC = () => {
     } catch (error) {
       console.error('Login failed:', error);
       // Handle error (e.g., show error message to user)
+      alert('Login failed. Please check your credentials and try again.');
     }
   };
-
 
   const handleGoogleLogin = () => {
     window.location.href = 'http://localhost:5003/api/auth/google';
   };
-
 
   return (
     <Container maxWidth="xs" className="login-container">
@@ -73,7 +76,6 @@ const Login: React.FC = () => {
     </Container>
   );
 };
-
 
 export default Login;
 

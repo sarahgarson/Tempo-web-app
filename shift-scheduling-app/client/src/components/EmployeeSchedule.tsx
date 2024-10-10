@@ -11,9 +11,16 @@ const EmployeeSchedule: React.FC = () => {
   const availability = useSelector((state: RootState) => state.availability);
   const [currentWeek, setCurrentWeek] = useState(new Date());
 
+  const numberToDay: Record<number, string> = {
+    1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday', 7: 'Sunday'
+  };
+
+  const dayToNumber: Record<string, number> = {
+    'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6, 'Sunday': 7
+  };
 
   const formatAvailability = (data: any[]) => {
-    const formatted: Record<string, Record<string, number>> = {};
+    const formatted: Record<number, Record<string, number>> = {};
     data.forEach(item => {
       if (!formatted[item.day_of_week]) formatted[item.day_of_week] = {};
       formatted[item.day_of_week][`${item.start_time}-${item.end_time}`] = item.status || 0;
@@ -24,9 +31,11 @@ const EmployeeSchedule: React.FC = () => {
   useEffect(() => {
     const fetchAvailability = async () => {
       try {
+        const token = localStorage.getItem('token');
+        const weekString = currentWeek.toISOString().split('T')[0];
         const response = await axios.get('http://localhost:5003/api/schedules/availability', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-          params: { week: currentWeek.toISOString().split('T')[0] },
+          headers: { Authorization: `Bearer ${token}` },
+          params: { week: weekString },
         });
         const formattedAvailability = formatAvailability(response.data);
         dispatch(setAvailability(formattedAvailability));
@@ -34,33 +43,37 @@ const EmployeeSchedule: React.FC = () => {
         console.error('Failed to fetch availability:', error);
       }
     };
-  
+
     fetchAvailability();
   }, [currentWeek, dispatch]);
-    
-  
 
   const handleAvailabilityChange = (day: string, shift: string) => {
+    const dayNumber = dayToNumber[day];
     const newAvailability = JSON.parse(JSON.stringify(availability));
-    if (!newAvailability[day]) {
-      newAvailability[day] = {};
+    if (!newAvailability[dayNumber]) {
+      newAvailability[dayNumber] = {};
     }
-    newAvailability[day][shift] = ((newAvailability[day][shift] || 0) + 1) % 3;
-    console.log('New availability:', newAvailability);
+    if (!newAvailability[dayNumber][shift]) {
+      newAvailability[dayNumber][shift] = 0;
+    }
+    newAvailability[dayNumber][shift] = ((newAvailability[dayNumber][shift] || 0) + 1) % 3;
     dispatch(setAvailability(newAvailability));
   };
-  
-  
 
   const saveAvailability = async () => {
     try {
-      await axios.post('http://localhost:5003/api/schedules/availability', 
-        { availability, week: currentWeek.toISOString().split('T')[0] },
+      const weekString = currentWeek.toISOString().split('T')[0];
+      const response = await axios.post('http://localhost:5003/api/schedules/availability', 
+        { availability, week: weekString },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
+      console.log('Save availability response:', response.data);
       alert('Availability saved successfully!');
     } catch (error) {
       console.error('Failed to save availability:', error);
+      if ((error as any).response) {
+        console.error('Error response:', (error as any).response.data);
+      }
     }
   };
 
@@ -79,8 +92,8 @@ const EmployeeSchedule: React.FC = () => {
   const getAvailabilityColor = (status: number) => {
     switch (status) {
       case 0: return 'white';
-      case 1: return '#ffcccb'; // light red
-      case 2: return '#90ee90'; // light green
+      case 1: return '#ffcccb'; 
+      case 2: return '#90ee90'; 
       default: return 'white';
     }
   };
@@ -111,18 +124,21 @@ const EmployeeSchedule: React.FC = () => {
             {days.map((day) => (
               <TableRow key={day}>
                 <TableCell>{day}</TableCell>
-                {shifts.map((shift) => (
-                 <TableCell 
-                 key={`${day}-${shift}`} 
-                 onClick={() => handleAvailabilityChange(day, shift)}
-                 style={{ 
-                   cursor: 'pointer',
-                   backgroundColor: getAvailabilityColor(availability[day]?.[shift] || 0)
-                 }}
-               >
-                 {getAvailabilityStatus(availability[day]?.[shift] || 0)}
-               </TableCell>
-                ))}
+                {shifts.map((shift) => {
+                  const dayNumber = dayToNumber[day];
+                  return (
+                    <TableCell 
+                      key={`${day}-${shift}`} 
+                      onClick={() => handleAvailabilityChange(day, shift)}
+                      style={{ 
+                        cursor: 'pointer',
+                        backgroundColor: getAvailabilityColor(availability[dayNumber]?.[shift] || 0)
+                      }}
+                    >
+                      {getAvailabilityStatus(availability[dayNumber]?.[shift] || 0)}
+                    </TableCell>
+                  );
+                })}
               </TableRow>
             ))}
           </TableBody>
@@ -136,3 +152,5 @@ const EmployeeSchedule: React.FC = () => {
 };
 
 export default EmployeeSchedule;
+
+

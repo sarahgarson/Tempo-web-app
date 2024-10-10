@@ -11,7 +11,7 @@ const initialState: ScheduleState = {
 
 const rootReducer = createReducer(initialState, (builder) => {
   builder.addCase(setAvailability, (state, action) => {
-    state.availability = action.payload;
+    state.availability = JSON.parse(JSON.stringify(action.payload));
   });
 });
 

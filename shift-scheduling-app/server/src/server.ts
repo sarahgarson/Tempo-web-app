@@ -22,6 +22,17 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(passport.initialize());
 
+// Error handling middleware
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Server error:', err);
+  console.error('Stack trace:', err.stack);
+  res.status(500).json({ 
+    message: 'Internal server error', 
+    error: err.message,
+    stack: process.env.NODE_ENV === 'production' ? '🥞' : err.stack
+  });
+});
+
 // Logging middleware
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);

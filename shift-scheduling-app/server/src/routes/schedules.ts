@@ -24,6 +24,7 @@ router.get('/availability', authenticateToken, async (req: Request, res: Respons
   }
 });
 
+
 router.post('/availability', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
   const authenticatedReq = req as AuthenticatedRequest;
   const { userId } = authenticatedReq.user;
@@ -32,17 +33,16 @@ router.post('/availability', authenticateToken, async (req: Request, res: Respon
   try {
     await pool.query('BEGIN');
 
-    // Delete existing entries
-    await pool.query('DELETE FROM availability WHERE user_id = $1 AND week = $2', [userId, week]);
-
-    // Insert new entries
     for (const day in availability) {
       for (const shift in availability[day]) {
         const [startTime, endTime] = shift.split('-');
         const status = availability[day][shift];
         await pool.query(
-          'INSERT INTO availability (user_id, week, day_of_week, start_time, end_time, status) VALUES ($1, $2, $3, $4, $5, $6)',
-          [userId, week, parseInt(day), startTime, endTime, status]
+          `INSERT INTO availability (user_id, week, day_of_week, start_time, end_time, status)
+           VALUES ($1, $2, $3, $4, $5, $6)
+           ON CONFLICT (user_id, week, day_of_week, start_time, end_time)
+           DO UPDATE SET status = EXCLUDED.status`,
+          [userId, week, day, startTime, endTime, status]
         );
       }
     }

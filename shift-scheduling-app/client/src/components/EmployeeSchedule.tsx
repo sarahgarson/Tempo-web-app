@@ -5,6 +5,7 @@ import { setAvailability } from '../redux/actions';
 import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import axios from 'axios';
 import '../styles/EmployeeSchedule.css';
+import api from '../utils/api';
 
 const EmployeeSchedule: React.FC = () => {
   const dispatch = useDispatch();
@@ -23,29 +24,42 @@ const EmployeeSchedule: React.FC = () => {
     const formatted: Record<number, Record<string, number>> = {};
     data.forEach(item => {
       if (!formatted[item.day_of_week]) formatted[item.day_of_week] = {};
-      formatted[item.day_of_week][`${item.start_time}-${item.end_time}`] = item.status || 0;
+      formatted[item.day_of_week][`${item.start_time}-${item.end_time}`] = item.status;
     });
     return formatted;
   };
 
   useEffect(() => {
-    const fetchAvailability = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const weekString = currentWeek.toISOString().split('T')[0];
-        const response = await axios.get('http://localhost:5003/api/schedules/availability', {
-          headers: { Authorization: `Bearer ${token}` },
-          params: { week: weekString },
-        });
-        const formattedAvailability = formatAvailability(response.data);
-        dispatch(setAvailability(formattedAvailability));
-      } catch (error) {
-        console.error('Failed to fetch availability:', error);
-      }
-    };
+    localStorage.setItem('currentWeek', currentWeek.toISOString());
+  }, [currentWeek]);
 
-    fetchAvailability();
-  }, [currentWeek, dispatch]);
+  useEffect(() => {
+    const storedWeek = localStorage.getItem('currentWeek');
+    if (storedWeek) {
+      setCurrentWeek(new Date(storedWeek));
+    }
+
+    const storedAvailability = localStorage.getItem('availability');
+    if (storedAvailability) {
+      dispatch(setAvailability(JSON.parse(storedAvailability)));
+    } else {
+      fetchAvailability();
+    }
+  }, []);
+
+  const fetchAvailability = async () => {
+    try {
+      const weekString = currentWeek.toISOString().split('T')[0];
+      const response = await api.get('/schedules/availability', {
+        params: { week: weekString },
+      });
+      const formattedAvailability = formatAvailability(response.data);
+      dispatch(setAvailability(formattedAvailability));
+      localStorage.setItem('availability', JSON.stringify(formattedAvailability));
+    } catch (error) {
+      console.error('Failed to fetch availability:', error);
+    }
+  };
 
   const handleAvailabilityChange = (day: string, shift: string) => {
     const dayNumber = dayToNumber[day];
@@ -56,24 +70,21 @@ const EmployeeSchedule: React.FC = () => {
     if (!newAvailability[dayNumber][shift]) {
       newAvailability[dayNumber][shift] = 0;
     }
-    newAvailability[dayNumber][shift] = ((newAvailability[dayNumber][shift] || 0) + 1) % 3;
+    newAvailability[dayNumber][shift] = (newAvailability[dayNumber][shift] + 1) % 3;
     dispatch(setAvailability(newAvailability));
+    localStorage.setItem('availability', JSON.stringify(newAvailability));
   };
 
   const saveAvailability = async () => {
     try {
       const weekString = currentWeek.toISOString().split('T')[0];
-      const response = await axios.post('http://localhost:5003/api/schedules/availability', 
-        { availability, week: weekString },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      const response = await api.post('/schedules/availability', 
+        { availability, week: weekString }
       );
       console.log('Save availability response:', response.data);
       alert('Availability saved successfully!');
     } catch (error) {
       console.error('Failed to save availability:', error);
-      if ((error as any).response) {
-        console.error('Error response:', (error as any).response.data);
-      }
     }
   };
 
@@ -152,5 +163,6 @@ const EmployeeSchedule: React.FC = () => {
 };
 
 export default EmployeeSchedule;
+
 
 

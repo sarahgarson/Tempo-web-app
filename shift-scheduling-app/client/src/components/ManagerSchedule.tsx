@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TextField } from '@mui/material';
 import axios from 'axios';
 import '../styles/ManagerSchedule.css';
+import api from '../utils/api';
 
 interface Schedule {
   [day: string]: {
@@ -26,8 +27,7 @@ const ManagerSchedule: React.FC = () => {
   useEffect(() => {
     const fetchScheduleOptions = async () => {
       try {
-        const response = await axios.get<{ scheduleOptions: Schedule[], employeeAvailability: EmployeeAvailability }>('http://localhost:5003/api/schedules/manager-options', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        const response = await api.get<{ scheduleOptions: Schedule[], employeeAvailability: EmployeeAvailability }>('/schedules/manager-options', {
           params: { week: currentWeek.toISOString() },
         });
         setScheduleOptions(response.data.scheduleOptions);
@@ -47,9 +47,8 @@ const ManagerSchedule: React.FC = () => {
 
   const saveSchedule = async () => {
     try {
-      await axios.post('http://localhost:5003/api/schedules/select', 
-        { schedule: customSchedule, week: currentWeek.toISOString() },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      await api.post('/schedules/select', 
+        { schedule: customSchedule, week: currentWeek.toISOString() }
       );
       alert('Schedule saved and sent to employees!');
       setEditMode(false);

@@ -1,6 +1,7 @@
 import { createReducer } from '@reduxjs/toolkit';
 import { setAvailability } from './actions';
 
+
 interface ScheduleState {
   availability: Record<string, Record<string, number>>;
 }

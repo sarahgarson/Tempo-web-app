@@ -44,6 +44,8 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/schedules', passport.authenticate('jwt', { session: false }), scheduleRoutes);
 
+
+
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Server error:', err);

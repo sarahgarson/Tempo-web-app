@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TextField } from '@mui/material';
+import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TextField, Select, MenuItem } from '@mui/material';
 import axios from 'axios';
 import '../styles/ManagerSchedule.css';
 import api from '../utils/api';
@@ -12,9 +12,14 @@ interface Schedule {
 
 interface EmployeeAvailability {
   [day: string]: {
-    [shift: string]: string[];
+    [shift: string]: Array<{
+      name: string;
+      username: string;
+      status: 'Want to work' | 'Neutral' | "Can't work";
+    }>;
   };
 }
+
 
 const ManagerSchedule: React.FC = () => {
   const [scheduleOptions, setScheduleOptions] = useState<Schedule[]>([]);
@@ -23,6 +28,26 @@ const ManagerSchedule: React.FC = () => {
   const [employeeAvailability, setEmployeeAvailability] = useState<EmployeeAvailability>({});
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [editMode, setEditMode] = useState(false);
+
+    // New function to get available employees for a shift
+    const getAvailableEmployees = (day: string, shift: string) => {
+      return employeeAvailability[day]?.[shift]?.filter(employee => 
+        employee.status === 'Want to work' || employee.status === 'Neutral'
+      ) || [];
+    };
+
+  const shuffleSchedule = async (optionIndex: number) => {
+    try {
+      const response = await api.post('/schedules/shuffle', {
+        week: currentWeek.toISOString(),
+      });
+      const newScheduleOptions = [...scheduleOptions];
+      newScheduleOptions[optionIndex] = response.data.schedule;
+      setScheduleOptions(newScheduleOptions);
+    } catch (error) {
+      console.error('Failed to shuffle schedule:', error);
+    }
+  };
 
   useEffect(() => {
     const fetchScheduleOptions = async () => {
@@ -57,8 +82,10 @@ const ManagerSchedule: React.FC = () => {
     }
   };
 
+  // Updated handleCustomScheduleChange function
   const handleCustomScheduleChange = (day: string, shift: string, value: string) => {
-    if (!employeeAvailability[day][shift].includes(value)) {
+    const availableEmployees = getAvailableEmployees(day, shift);
+    if (!availableEmployees.some(e => e.username === value)) {
       alert(`Warning: ${value} is not available for this shift!`);
     }
     setCustomSchedule(prev => ({
@@ -69,8 +96,9 @@ const ManagerSchedule: React.FC = () => {
       }
     }));
   };
+  
 
-  const shifts = ['7:00-16:00', '10:00-19:00', '13:00-22:00'];
+  const shifts = ['07:00-16:00', '10:00-19:00', '13:00-22:00'];
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   return (
@@ -89,6 +117,7 @@ const ManagerSchedule: React.FC = () => {
         {scheduleOptions.map((option, index) => (
           <div key={index} className="schedule-option" onClick={() => selectSchedule(option)}>
             <h3>Option {index + 1}</h3>
+            <Button onClick={(e) => { e.stopPropagation(); shuffleSchedule(index); }}>Shuffle</Button>
             <TableContainer component={Paper}>
               <Table size="small">
                 <TableHead>
@@ -135,10 +164,17 @@ const ManagerSchedule: React.FC = () => {
                   {shifts.map((shift) => (
                     <TableCell key={`${day}-${shift}`}>
                       {editMode ? (
-                        <TextField
-                          value={customSchedule[day]?.[shift] || ''}
-                          onChange={(e) => handleCustomScheduleChange(day, shift, e.target.value)}
-                        />
+                        <Select
+                        value={customSchedule[day]?.[shift] || ''}
+                        onChange={(e) => handleCustomScheduleChange(day, shift, e.target.value as string)}
+                      >
+                        <MenuItem value="">-</MenuItem>
+                        {getAvailableEmployees(day, shift).map((employee) => (
+                          <MenuItem key={employee.username} value={employee.username}>
+                            {employee.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
                       ) : (
                         customSchedule[day]?.[shift] || '-'
                       )}
@@ -164,9 +200,12 @@ const ManagerSchedule: React.FC = () => {
           <div key={day}>
             <h3>{day}</h3>
             {shifts.map((shift) => (
-              <p key={`${day}-${shift}`}>
-                {shift}: {employeeAvailability[day]?.[shift]?.join(', ') || 'No employees available'}
-              </p>
+              <div key={`${day}-${shift}`}>
+              <h4>{shift}</h4>
+              <p>Want to work: {employeeAvailability[day]?.[shift]?.filter(e => e.status === 'Want to work').map(e => e.name).join(', ') || 'None'}</p>
+              <p>Neutral: {employeeAvailability[day]?.[shift]?.filter(e => e.status === 'Neutral').map(e => e.name).join(', ') || 'None'}</p>
+              <p>Can't work: {employeeAvailability[day]?.[shift]?.filter(e => e.status === "Can't work").map(e => e.name).join(', ') || 'None'}</p>
+            </div>
             ))}
           </div>
         ))}

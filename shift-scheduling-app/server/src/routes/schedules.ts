@@ -77,6 +77,105 @@ router.post('/availability', authenticateToken, async (req: Request, res: Respon
   }
 });
 
+router.get('/manager-options', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
+  const { week } = req.query;
+
+  try {
+    const scheduleOptions = await getScheduleOptions(week as string);
+    const employeeAvailability = await getDetailedEmployeeAvailability(week as string);
+    res.json({ scheduleOptions, employeeAvailability });
+  } catch (error) {
+    console.error('Error fetching manager options:', error);
+    res.status(500).json({ message: 'Error fetching manager options', error: (error as Error).message });
+  }
+});
+
+router.post('/shuffle', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { week } = req.body;
+    const shuffledSchedule = await generateShuffledSchedule(week);
+    res.json({ schedule: shuffledSchedule });
+  } catch (error) {
+    console.error('Error shuffling schedule:', error);
+    res.status(500).json({ message: 'Error shuffling schedule', error: (error as Error).message });
+  }
+});
+
+router.post('/select', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { schedule, week } = req.body;
+    await saveManagerSchedule(schedule, week);
+    res.json({ message: 'Schedule saved successfully' });
+  } catch (error) {
+    console.error('Error saving schedule:', error);
+    res.status(500).json({ message: 'Error saving schedule', error: (error as Error).message });
+  }
+});
+
+async function getScheduleOptions(week: string) {
+  const employeeAvailability = await getDetailedEmployeeAvailability(week);
+  return [
+    generateScheduleOption(employeeAvailability),
+    generateScheduleOption(employeeAvailability)
+  ];
+}
+
+async function getDetailedEmployeeAvailability(week: string) {
+  const result = await pool.query(
+    'SELECT a.user_id, u.name, a.day_of_week, a.start_time, a.end_time, a.status FROM availability a JOIN users u ON a.user_id = u.id WHERE a.week = $1',
+    [week]
+  );
+
+  const employeeAvailability: any = {};
+  result.rows.forEach((row) => {
+    const { user_id, name, day_of_week, start_time, end_time, status } = row;
+    if (!employeeAvailability[day_of_week]) {
+      employeeAvailability[day_of_week] = {};
+    }
+    const shift = `${start_time}-${end_time}`;
+    if (!employeeAvailability[day_of_week][shift]) {
+      employeeAvailability[day_of_week][shift] = [];
+    }
+    employeeAvailability[day_of_week][shift].push({ username: user_id, name, status });
+  });
+
+  return employeeAvailability;
+}
+
+function generateScheduleOption(employeeAvailability: any) {
+  const schedule: any = {};
+  for (const day in employeeAvailability) {
+    schedule[day] = {};
+    for (const shift in employeeAvailability[day]) {
+      const availableEmployees = employeeAvailability[day][shift].filter((employee: any) => 
+        employee.status === 'Want to work' || employee.status === 'Neutral'
+      );
+      schedule[day][shift] = availableEmployees.length > 0 
+        ? availableEmployees[Math.floor(Math.random() * availableEmployees.length)].username 
+        : '-';
+    }
+  }
+  return schedule;
+}
+
+async function generateShuffledSchedule(week: string) {
+  const employeeAvailability = await getDetailedEmployeeAvailability(week);
+  return generateScheduleOption(employeeAvailability);
+}
+
+async function saveManagerSchedule(schedule: any, week: string) {
+  const date = new Date(week);
+  const year = date.getFullYear();
+  const isoWeek = getISOWeek(date);
+
+  await pool.query(
+    `INSERT INTO manager_schedules (week, year, iso_week, schedule_data)
+     VALUES ($1, $2, $3, $4)
+     ON CONFLICT (week) DO UPDATE SET schedule_data = EXCLUDED.schedule_data`,
+    [week, year, isoWeek, JSON.stringify(schedule)]
+  );
+}
+
 // Helper function to get ISO week number
 function getISOWeek(date: Date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -87,56 +186,7 @@ function getISOWeek(date: Date) {
 }
 
 
-router.get('/manager-options', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
-  const { week } = req.query;
 
-  try {
-    // Fetch employee availability
-    const availabilityResult = await pool.query(
-      'SELECT user_id, day_of_week, start_time, end_time, status FROM availability WHERE week = $1',
-      [week]
-    );
-
-    // Process availability data
-    const employeeAvailability: any = {};
-    availabilityResult.rows.forEach((row) => {
-      const { user_id, day_of_week, start_time, end_time, status } = row;
-      if (!employeeAvailability[day_of_week]) {
-        employeeAvailability[day_of_week] = {};
-      }
-      const shift = `${start_time}-${end_time}`;
-      if (!employeeAvailability[day_of_week][shift]) {
-        employeeAvailability[day_of_week][shift] = [];
-      }
-      if (status === 'available') {
-        employeeAvailability[day_of_week][shift].push(user_id);
-      }
-    });
-
-    // Generate schedule options (this is a simplified version, you may want to implement a more sophisticated algorithm)
-    const scheduleOptions = [
-      generateScheduleOption(employeeAvailability),
-      generateScheduleOption(employeeAvailability)
-    ];
-
-    res.json({ scheduleOptions, employeeAvailability });
-  } catch (error) {
-    console.error('Fetch manager options error:', error);
-    res.status(500).json({ message: 'Server error', error: (error as Error).message });
-  }
-});
-
-function generateScheduleOption(employeeAvailability: any) {
-  const schedule: any = {};
-  for (const day in employeeAvailability) {
-    schedule[day] = {};
-    for (const shift in employeeAvailability[day]) {
-      const availableEmployees = employeeAvailability[day][shift];
-      schedule[day][shift] = availableEmployees.length > 0 ? availableEmployees[Math.floor(Math.random() * availableEmployees.length)] : '-';
-    }
-  }
-  return schedule;
-}
 
 export default router;
 

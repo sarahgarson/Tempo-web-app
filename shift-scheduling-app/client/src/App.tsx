@@ -6,6 +6,7 @@ import ManagerSchedule from './components/ManagerSchedule';
 import PrivateRoute from './components/PrivateRoute';
 import AuthCallback from './components/AuthCallback';
 
+
 const App: React.FC = () => {
   return (
     <Routes>

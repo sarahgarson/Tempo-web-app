@@ -1,6 +1,6 @@
-*{
-  background-color: hsla(13, 69%, 80%, 0.5);
-}
+body{
+  background-color: hsla(204, 68%, 91%, 0.5);
+} 
 
 .login-container {
   display: flex;
@@ -11,7 +11,7 @@
 }
 
 .login-title {
-  color: #530606;
+  color: #2c3e50;
   margin-bottom: 2rem;
 }
 
@@ -23,12 +23,12 @@
 
 .login-button {
   margin-top: 10px;
-  background-color: #ff4500;
+  background-color: #4991b6;
 
 }
 
 .google-button {
   margin-top: 20px;
   background-color: #fff;
-  color: #8e2424;
+  color: #5585b9;
 }

@@ -205,35 +205,60 @@ const selectSchedule = (schedule: Schedule) => {
 };
 
 
-    const saveSchedule = async () => {
-      try {
-        await api.post('/schedules/select', { 
-          schedules: scheduleOptions,
-          week: currentWeek.toISOString(),
-          selectedOptionIndex
-        });
-        alert('Schedule saved and sent to employees!');
-        setEditMode(false);
-      } catch (error) {
-        console.error('Failed to save schedule:', error);
+const saveSchedule = async () => {
+  try {
+    // Prepare the schedule data
+    const scheduleToSave = editMode ? [customSchedule] : scheduleOptions;
+    
+    const response = await api.post('/schedules/select', { 
+      schedules: scheduleToSave.map((schedule, index) => ({
+        data: schedule.data,
+        optionNumber: index + 1,
+        isSelected: index === selectedOptionIndex
+      })),
+      week: currentWeek.toISOString(),
+      selectedOptionIndex: editMode ? 0 : selectedOptionIndex
+    });
+
+    console.log('Server response:', response.data);
+    alert('Schedule saved and sent to employees!');
+    setEditMode(false);
+  } catch (error) {
+    console.error('Failed to save schedule:', error);
+    if (axios.isAxiosError(error)) {
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error('Error data:', error.response.data);
+        console.error('Error status:', error.response.status);
+        console.error('Error headers:', error.response.headers);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error('Error request:', error.request);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error('Error message:', error.message);
       }
-    };
-
-    const handleOptionSelect = (index: number) => {
-      setSelectedOptionIndex(index);
-      setCustomSchedule(scheduleOptions[index]);
-    };
-  
-  
-  const getStatusText = (status: number) => {
-    switch (status) {
-      case 0: return "Can't work";
-      case 1: return 'Available';
-      case 2: return 'Preferred';
-      default: return 'Unknown';
+    } else {
+      console.error('Unexpected error:', error);
     }
-  };
+    alert('Failed to save schedule. Please check the console for more details.');
+  }
+};
 
+const handleOptionSelect = (index: number) => {
+  setSelectedOptionIndex(index);
+  setCustomSchedule(scheduleOptions[index]);
+};
+
+const getStatusText = (status: number) => {
+  switch (status) {
+    case 0: return "Can't work";
+    case 1: return 'Available';
+    case 2: return 'Preferred';
+    default: return 'Unknown';
+  }
+};
 
   const getAvailableEmployees = (day: string, shift: string) => {
     const dayIndex = days.indexOf(day);
@@ -267,7 +292,7 @@ const selectSchedule = (schedule: Schedule) => {
 
     
 
-  // Update the handleCustomScheduleChange function
+  // Updated the handleCustomScheduleChange function
   const handleCustomScheduleChange = (day: string, shift: string, value: number | null) => {
     if (value !== null) {
       const availableEmployees = getAvailableEmployees(day, shift);

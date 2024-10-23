@@ -136,9 +136,28 @@ router.get('/manager-options', authenticateToken, async (req: Request, res: Resp
 
 
 
+// router.post('/select', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
+//   try {
+//     const { schedules, week, selectedOptionIndex } = req.body;
+//     await saveManagerSchedule(schedules, week, selectedOptionIndex);
+//     res.json({ message: 'Schedules saved successfully' });
+//   } catch (error) {
+//     console.error('Error saving schedules:', error);
+//     res.status(500).json({ message: 'Error saving schedules', error: (error as Error).message });
+//   }
+// });
+
+// Update the route handler to see if I can save my custom schedule table to the database
 router.post('/select', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { schedules, week, selectedOptionIndex } = req.body;
+    console.log('Received data:', { schedules, week, selectedOptionIndex });
+
+    // Validate incoming data
+    if (!Array.isArray(schedules) || schedules.length === 0 || !week || selectedOptionIndex === undefined) {
+      return res.status(400).json({ message: 'Invalid data format' });
+    }
+
     await saveManagerSchedule(schedules, week, selectedOptionIndex);
     res.json({ message: 'Schedules saved successfully' });
   } catch (error) {
@@ -309,6 +328,9 @@ async function saveManagerSchedule(schedules: any[], week: string, selectedOptio
 
     // Then, insert or update each schedule option
     for (let i = 0; i < schedules.length; i++) {
+      const schedule = schedules[i];
+      console.log(`Saving schedule option ${i}:`, schedule);
+
       await pool.query(
         `INSERT INTO manager_schedules (week, year, iso_week, schedule_data, option_number, is_selected)
          VALUES ($1, $2, $3, $4, $5, $6)
@@ -322,6 +344,8 @@ async function saveManagerSchedule(schedules: any[], week: string, selectedOptio
     await pool.query('COMMIT');
   } catch (error) {
     await pool.query('ROLLBACK');
+// adding this console log to track the error that Im getting
+    console.error('Error in saveManagerSchedule:', error);
     throw error;
   }
 }

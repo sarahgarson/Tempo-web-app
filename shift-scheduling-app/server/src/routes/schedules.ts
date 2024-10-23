@@ -111,17 +111,18 @@ router.get('/manager-options', authenticateToken, async (req: Request, res: Resp
     const employeeAvailability = await getDetailedEmployeeAvailability(week as string, endWeek as string);
     
     const formattedResponse = {
-      scheduleOptions: scheduleOptions.map(option => formatScheduleOption(option)),
+      scheduleOptions: scheduleOptions,
       employeeAvailability: formatEmployeeAvailability(employeeAvailability)
     };
     
-    console.log('Sending response:', formattedResponse);
+    console.log('Sending response:', JSON.stringify(formattedResponse, null, 2));
     res.json(formattedResponse);
   } catch (error) {
     console.error('Error fetching manager options:', error);
     res.status(500).json({ message: 'Error fetching manager options', error: (error as Error).message });
   }
 });
+
 
 
 router.post('/select', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
@@ -140,7 +141,7 @@ router.post('/select', authenticateToken, async (req: Request, res: Response, ne
 async function getScheduleOptions(weekStart: string, weekEnd: string) {
   console.log('Getting schedule options from', weekStart, 'to', weekEnd);
   const employeeAvailability = await getDetailedEmployeeAvailability(weekStart, weekEnd);
-  console.log('Employee availability:', employeeAvailability);
+  console.log('Employee availability:', JSON.stringify(employeeAvailability, null, 2));
 
   // Check if there are existing options in the database
   const existingOptions = await pool.query(
@@ -219,19 +220,25 @@ router.post('/shuffle', authenticateToken, async (req: Request, res: Response, n
 
 function generateScheduleOption(employeeAvailability: any) {
   const schedule: any = {};
-  for (const day in employeeAvailability) {
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const shifts = ['07:00-16:00', '10:00-19:00', '13:00-22:00'];
+
+  days.forEach((day, index) => {
     schedule[day] = {};
-    for (const shift in employeeAvailability[day]) {
-      const availableEmployees = employeeAvailability[day][shift].filter((employee: any) => 
+    shifts.forEach(shift => {
+      const [start, end] = shift.split('-');
+      const availableEmployees = employeeAvailability[index + 1]?.[`${start}:00-${end}:00`]?.filter((employee: any) => 
         employee.status === 1 || employee.status === 2
-      );
+      ) || [];
       schedule[day][shift] = availableEmployees.length > 0 
         ? availableEmployees[Math.floor(Math.random() * availableEmployees.length)].id 
         : null;
-    }
-  }
+    });
+  });
+
   return schedule;
 }
+
 
 
 function formatScheduleOption(option: any) {

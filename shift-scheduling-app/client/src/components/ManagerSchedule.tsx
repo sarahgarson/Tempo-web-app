@@ -28,6 +28,12 @@ interface EmployeeAvailability {
   };
 }
 
+//added so we can get the employee data for the drop down
+interface Employee {
+  id: number;
+  name: string;
+}
+
 
 const ManagerSchedule: React.FC = () => {
   const [scheduleOptions, setScheduleOptions] = useState<Schedule[]>([]);
@@ -46,6 +52,8 @@ const ManagerSchedule: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [openPopoverDay, setOpenPopoverDay] = useState<string | null>(null);
   const [openPopoverShift, setOpenPopoverShift] = useState<string | null>(null);
+
+  const [employees, setEmployees] = useState<Employee[]>([]);
 
  
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
@@ -76,8 +84,21 @@ const ManagerSchedule: React.FC = () => {
     fetchData();
   }, [currentWeek]);
 
+//adding this one to see if the dropdown employee in the csustom table works 
+useEffect(() => {
+  const fetchEmployees = async () => {
+    try {
+      const response = await api.get('/employees');
+      setEmployees(response.data);
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+    }
+  };
 
-  
+  fetchEmployees();
+}, []);
+
+
   
 
   const fetchManagerOptions = useCallback(async () => {
@@ -119,6 +140,24 @@ const ManagerSchedule: React.FC = () => {
 useEffect(() => {
   fetchManagerOptions();
 }, [fetchManagerOptions, currentWeek]);
+
+  const checkForDuplicateAssignments = (schedule: ScheduleData) => {
+    const dailyAssignments: { [day: string]: Set<number> } = {};
+
+    for (const day in schedule) {
+      dailyAssignments[day] = new Set();
+      for (const shift in schedule[day]) {
+        const employeeId = schedule[day][shift];
+        if (employeeId !== null) {
+          if (dailyAssignments[day].has(employeeId)) {
+            return true; // Found a duplicate assignment
+          }
+          dailyAssignments[day].add(employeeId);
+        }
+      }
+    }
+    return false; // No duplicate assignments found
+  };
 
 
 
@@ -197,12 +236,10 @@ const selectSchedule = (schedule: Schedule) => {
 
 
   const getAvailableEmployees = (day: string, shift: string) => {
-    const dayIndex = days.indexOf(day) + 1;
-    const availableEmployees = employeeAvailability[dayIndex]?.[shift]?.filter(employee => 
+    const dayIndex = days.indexOf(day);
+    return employeeAvailability[dayIndex + 1]?.[shift]?.filter(employee => 
       employee.status === 1 || employee.status === 2
     ) || [];
-    console.log('Available employees for', day, shift, ':', availableEmployees);
-    return availableEmployees;
   };
 
   const handleCellClick = (event: React.MouseEvent<HTMLElement>, day: string, shift: string) => {
@@ -215,26 +252,15 @@ const selectSchedule = (schedule: Schedule) => {
 
 
   //for the dropdown menu for the manager to select the employee
-  const handlePopoverOpen = (event: React.MouseEvent<HTMLElement>, day: string, shift: string) => {
-    event.stopPropagation();
-    if (editMode) {
-      setAnchorEl(event.currentTarget);
-      setOpenPopoverDay(day);
-      setOpenPopoverShift(shift);
-      console.log('Popover opened for', day, shift);
-    }
-  };
-
   const handlePopoverClose = () => {
     setAnchorEl(null);
     setOpenPopoverDay(null);
     setOpenPopoverShift(null);
   };
 
-  const handleEmployeeSelect = (employeeId: number | null) => {
-    console.log('Employee selected:', employeeId, 'for', openPopoverDay, openPopoverShift);
-    if (openPopoverDay && openPopoverShift) {
-      handleCustomScheduleChange(openPopoverDay, openPopoverShift, employeeId);
+  const handleEmployeeSelect = (employeeId: number) => {
+    if (selectedDay && selectedShift) {
+      handleCustomScheduleChange(selectedDay, selectedShift, employeeId);
     }
     handlePopoverClose();
   };
@@ -245,8 +271,9 @@ const selectSchedule = (schedule: Schedule) => {
   const handleCustomScheduleChange = (day: string, shift: string, value: number | null) => {
     if (value !== null) {
       const availableEmployees = getAvailableEmployees(day, shift);
-      if (!availableEmployees.some(e => e.id === value)) {
-        alert(`Warning: Employee with ID ${value} is not available for this shift!`);
+      const selectedEmployee = availableEmployees.find(e => e.id === value);
+      if (selectedEmployee && selectedEmployee.status === 0) {
+        alert(`Warning: Employee with ID ${value} can't work this shift!`);
       }
     }
     setCustomSchedule(prev => ({
@@ -286,6 +313,9 @@ const selectSchedule = (schedule: Schedule) => {
           <div key={index} className={`schedule-option ${selectedOptionIndex === index ? 'selected' : ''}`} onClick={() => handleOptionSelect(index)}>
             <h3>Option {renderSafely(option.optionNumber)}</h3>
             <Button onClick={(e) => { e.stopPropagation(); shuffleSchedule(index); }}>Shuffle</Button>
+            {checkForDuplicateAssignments(option.data) && (
+              <div className="warning">Warning: Unexpected duplicate assignments detected</div>
+            )}
             <TableContainer component={Paper}>
               <Table size="small">
                 <TableHead>
@@ -337,13 +367,13 @@ const selectSchedule = (schedule: Schedule) => {
               <TableRow key={day}>
                 <TableCell>{day}</TableCell>
                 {shifts.map((shift) => (
-                  <TableCell 
-                    key={`${day}-${shift}`}
-                    onClick={(e) => editMode && handlePopoverOpen(e, day, shift)}
-                    style={{ cursor: editMode ? 'pointer' : 'default' }}
-                  >
-                    {getEmployeeName(customSchedule.data && customSchedule.data[day] ? customSchedule.data[day][shift] : null)}
-                  </TableCell>
+                   <TableCell 
+                   key={`${day}-${shift}`}
+                   onClick={(e) => handleCellClick(e, day, shift)}
+                   style={{ cursor: editMode ? 'pointer' : 'default' }}
+                 >
+                   {getEmployeeName(customSchedule.data[day]?.[shift])}
+                 </TableCell>
                 ))}
               </TableRow>
             ))}
@@ -369,22 +399,19 @@ const selectSchedule = (schedule: Schedule) => {
         }}
       >
         <List>
-          <ListItem disablePadding>
-            <ListItemButton onClick={() => handleEmployeeSelect(null)}>
-              <ListItemText primary="Clear" />
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => handleEmployeeSelect(0)}>
+            <ListItemText primary="Clear" />
+          </ListItemButton>
+        </ListItem>
+        {employees.map((employee) => (
+          <ListItem key={employee.id} disablePadding>
+            <ListItemButton onClick={() => handleEmployeeSelect(employee.id)}>
+              <ListItemText primary={employee.name} />
             </ListItemButton>
           </ListItem>
-          {openPopoverDay && openPopoverShift && getAvailableEmployees(openPopoverDay, openPopoverShift).map((employee) => (
-            <ListItem key={employee.id} disablePadding>
-              <ListItemButton onClick={() => handleEmployeeSelect(employee.id)}>
-                <ListItemText 
-                  primary={employee.name} 
-                  secondary={getStatusText(employee.status)} 
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
+        ))}
+      </List>
       </Popover>
       <div className="employee-availability">
   <h2>Employee Availability</h2>

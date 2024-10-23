@@ -143,3 +143,9 @@ tr:nth-child(even) {
   margin: 0.25rem 0;
   padding-left: 1rem;
 }
+
+.warning {
+  color: red;
+  font-weight: bold;
+  margin-bottom: 10px;
+}

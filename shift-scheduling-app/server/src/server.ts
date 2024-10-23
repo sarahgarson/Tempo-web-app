@@ -43,6 +43,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/schedules', passport.authenticate('jwt', { session: false }), scheduleRoutes);
+app.use('/api', scheduleRoutes);
 
 
 

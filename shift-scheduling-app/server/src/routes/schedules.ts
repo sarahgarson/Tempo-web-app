@@ -7,6 +7,17 @@ import { AuthenticatedRequest } from '../types';
 const router = express.Router();
 router.use(passport.authenticate('jwt', { session: false }));
 
+//fetching our employees from the database
+router.get('/employees', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await pool.query('SELECT id, name FROM users WHERE role = $1', ['employee']);
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching employees:', error);
+    res.status(500).json({ message: 'Error fetching employees', error: (error as Error).message });
+  }
+});
+
 const processEmployeeAvailability = (queryResult: any[]) => {
   const availability: { [key: string]: { [key: string]: any[] } } = {};
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -225,20 +236,26 @@ function generateScheduleOption(employeeAvailability: any) {
 
   days.forEach((day, index) => {
     schedule[day] = {};
+    const assignedEmployees = new Set();
+
     shifts.forEach(shift => {
       const [start, end] = shift.split('-');
       const availableEmployees = employeeAvailability[index + 1]?.[`${start}:00-${end}:00`]?.filter((employee: any) => 
-        employee.status === 1 || employee.status === 2
+        (employee.status === 1 || employee.status === 2) && !assignedEmployees.has(employee.id)
       ) || [];
-      schedule[day][shift] = availableEmployees.length > 0 
-        ? availableEmployees[Math.floor(Math.random() * availableEmployees.length)].id 
-        : null;
+
+      if (availableEmployees.length > 0) {
+        const selectedEmployee = availableEmployees[Math.floor(Math.random() * availableEmployees.length)];
+        schedule[day][shift] = selectedEmployee.id;
+        assignedEmployees.add(selectedEmployee.id);
+      } else {
+        schedule[day][shift] = null;
+      }
     });
   });
 
   return schedule;
 }
-
 
 
 function formatScheduleOption(option: any) {
@@ -268,12 +285,13 @@ function formatEmployeeAvailability(availability: any) {
 }
 
 
-
 async function generateShuffledSchedule(week: string) {
-  const weekEnd = week; // Assuming weekEnd is the same as week for this function
+  const weekEnd = week; 
   const employeeAvailability = await getDetailedEmployeeAvailability(week, weekEnd);
   return generateScheduleOption(employeeAvailability);
 }
+
+
 
 async function saveManagerSchedule(schedules: any[], week: string, selectedOptionIndex: number) {
   const date = new Date(week);

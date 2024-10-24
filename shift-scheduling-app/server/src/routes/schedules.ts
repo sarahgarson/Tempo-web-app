@@ -311,7 +311,7 @@ async function generateShuffledSchedule(week: string) {
 }
 
 
-
+//changed the fucntion since the second time I was trying to save the schedule I woul get an error
 async function saveManagerSchedule(schedules: any[], week: string, selectedOptionIndex: number) {
   const date = new Date(week);
   const year = date.getFullYear();
@@ -320,31 +320,27 @@ async function saveManagerSchedule(schedules: any[], week: string, selectedOptio
   await pool.query('BEGIN');
 
   try {
-    // First, unselect all schedules for this week
+    // Delete all existing schedules for this week
     await pool.query(
-      `UPDATE manager_schedules SET is_selected = false WHERE week = $1`,
+      `DELETE FROM manager_schedules WHERE week = $1`,
       [week]
     );
 
-    // Then, insert or update each schedule option
+    // Insert new schedules
     for (let i = 0; i < schedules.length; i++) {
       const schedule = schedules[i];
       console.log(`Saving schedule option ${i}:`, schedule);
 
       await pool.query(
         `INSERT INTO manager_schedules (week, year, iso_week, schedule_data, option_number, is_selected)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         ON CONFLICT (week, option_number) DO UPDATE 
-         SET schedule_data = EXCLUDED.schedule_data,
-             is_selected = EXCLUDED.is_selected`,
-        [week, year, isoWeek, JSON.stringify(schedules[i]), i + 1, i === selectedOptionIndex]
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [week, year, isoWeek, JSON.stringify(schedule.data), i + 1, i === selectedOptionIndex]
       );
     }
 
     await pool.query('COMMIT');
   } catch (error) {
     await pool.query('ROLLBACK');
-// adding this console log to track the error that Im getting
     console.error('Error in saveManagerSchedule:', error);
     throw error;
   }

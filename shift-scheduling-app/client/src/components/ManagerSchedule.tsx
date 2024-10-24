@@ -35,6 +35,7 @@ interface Employee {
 }
 
 
+
 const ManagerSchedule: React.FC = () => {
   const [scheduleOptions, setScheduleOptions] = useState<Schedule[]>([]);
   const [customSchedule, setCustomSchedule] = useState<Schedule>({
@@ -440,15 +441,15 @@ const getStatusText = (status: number) => {
       </Popover>
       <div className="employee-availability">
   <h2>Employee Availability</h2>
-  {Array.isArray(days) && days.map((day) => (
+  {days.map((day) => (
     <div key={day}>
-      <h3>{typeof day === 'string' || typeof day === 'number' ? day : 'Invalid day'}</h3>
-      {Array.isArray(shifts) && shifts.map((shift) => (
+      <h3>{day}</h3>
+      {shifts.map((shift) => (
         <div key={`${day}-${shift}`}>
-          <h4>{typeof shift === 'string' || typeof shift === 'number' ? shift : 'Invalid shift'}</h4>
-          <p>Preferred: {Array.isArray(employeeAvailability[day]?.[shift]) ? employeeAvailability[day][shift].filter((e: any) => e.status === 2).map((e: any) => e.name).join(', ') : 'None'}</p>
-          <p>Available: {Array.isArray(employeeAvailability[day]?.[shift]) ? employeeAvailability[day][shift].filter((e: any) => e.status === 1).map((e: any) => e.name).join(', ') : 'None'}</p>
-          <p>Can't work: {Array.isArray(employeeAvailability[day]?.[shift]) ? employeeAvailability[day][shift].filter((e: any) => e.status === 0).map((e: any) => e.name).join(', ') : 'None'}</p>
+          <h4>{shift}</h4>
+          <p>Preferred: {employeeAvailability[day]?.[shift]?.filter(e => e.status === 2).map(e => e.name).join(', ') || 'None'}</p>
+          <p>Available: {employeeAvailability[day]?.[shift]?.filter(e => e.status === 1).map(e => e.name).join(', ') || 'None'}</p>
+          <p>Can't work: {employeeAvailability[day]?.[shift]?.filter(e => e.status === 0).map(e => e.name).join(', ') || 'None'}</p>
         </div>
       ))}
     </div>

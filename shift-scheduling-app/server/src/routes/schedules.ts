@@ -120,10 +120,12 @@ router.get('/manager-options', authenticateToken, async (req: Request, res: Resp
     console.log('Received request for manager options, week:', week, 'to', endWeek);
     const scheduleOptions = await getScheduleOptions(week as string, endWeek as string);
     const employeeAvailability = await getDetailedEmployeeAvailability(week as string, endWeek as string);
+    const availabilityList = await getEmployeeAvailabilityList(week as string, endWeek as string);
     
     const formattedResponse = {
       scheduleOptions: scheduleOptions,
-      employeeAvailability: formatEmployeeAvailability(employeeAvailability)
+      employeeAvailability: formatEmployeeAvailability(employeeAvailability),
+      availabilityList: availabilityList
     };
     
     console.log('Sending response:', JSON.stringify(formattedResponse, null, 2));
@@ -345,6 +347,68 @@ async function saveManagerSchedule(schedules: any[], week: string, selectedOptio
     throw error;
   }
 }
+
+//new function for the list availability of the employees in the manager part
+async function getEmployeeAvailabilityList(weekStart: string, weekEnd: string) {
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const shifts = ['07:00-16:00', '10:00-19:00', '13:00-22:00'];
+  
+  const result = await pool.query(
+    `SELECT 
+      a.user_id, 
+      u.name, 
+      a.day_of_week, 
+      a.start_time, 
+      a.end_time, 
+      a.status 
+    FROM availability a 
+    JOIN users u ON a.user_id = u.id 
+    WHERE a.week >= $1 AND a.week <= $2`,
+    [weekStart, weekEnd]
+  );
+
+  const availabilityList: any = {};
+
+  // Initialize structure
+  daysOfWeek.forEach(day => {
+    availabilityList[day] = {};
+    shifts.forEach(shift => {
+      availabilityList[day][shift] = {
+        preferred: [],
+        available: [],
+        cantWork: []
+      };
+    });
+  });
+
+  // Populate data
+  result.rows.forEach(row => {
+    const day = daysOfWeek[row.day_of_week - 1];
+    const shift = `${row.start_time.slice(0, 5)}-${row.end_time.slice(0, 5)}`;
+    
+    if (availabilityList[day] && availabilityList[day][shift]) {
+      const employee = {
+        id: row.user_id,
+        name: row.name
+      };
+
+      switch (Number(row.status)) {
+        case 2:
+          availabilityList[day][shift].preferred.push(employee);
+          break;
+        case 1:
+          availabilityList[day][shift].available.push(employee);
+          break;
+        case 0:
+          availabilityList[day][shift].cantWork.push(employee);
+          break;
+      }
+    }
+  });
+
+  return availabilityList;
+}
+
 
 // Helper function to get ISO week number
 function getISOWeek(date: Date) {

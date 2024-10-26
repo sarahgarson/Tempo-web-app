@@ -34,6 +34,16 @@ interface Employee {
   name: string;
 }
 
+//this is for the list at the bottom of the page so we can see the availability of the employees
+interface AvailabilityList {
+  [day: string]: {
+    [shift: string]: {
+      preferred: Array<{ id: number; name: string }>;
+      available: Array<{ id: number; name: string }>;
+      cantWork: Array<{ id: number; name: string }>;
+    }
+  }
+}
 
 
 const ManagerSchedule: React.FC = () => {
@@ -48,6 +58,8 @@ const ManagerSchedule: React.FC = () => {
   const [employeeAvailability, setEmployeeAvailability] = useState<EmployeeAvailability>({});
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [editMode, setEditMode] = useState(false);
+
+  const [availabilityList, setAvailabilityList] = useState<AvailabilityList>({}); //added this one to see if it works
 
 
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -66,17 +78,38 @@ const ManagerSchedule: React.FC = () => {
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   // Initialize scheduleOptions and customSchedule
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const response = await api.get('/schedules/manager-options', {
+  //         params: { 
+  //           week: currentWeek.toISOString(),
+  //         },
+  //       });
+  //       setScheduleOptions(response.data.scheduleOptions);
+  //       setEmployeeAvailability(response.data.employeeAvailability);
+  //       console.log('Employee Availability:', response.data.employeeAvailability);
+  //     } catch (error) {
+  //       console.error('Error fetching data:', error);
+  //     }
+  //   };
+  
+  //   fetchData();
+  // }, [currentWeek]);
+
+//using this one to see if the list of emmployees works
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await api.get('/schedules/manager-options', {
           params: { 
             week: currentWeek.toISOString(),
+            endWeek: new Date(currentWeek.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString()
           },
         });
         setScheduleOptions(response.data.scheduleOptions);
         setEmployeeAvailability(response.data.employeeAvailability);
-        console.log('Employee Availability:', response.data.employeeAvailability);
+        setAvailabilityList(response.data.availabilityList);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -445,12 +478,12 @@ const getStatusText = (status: number) => {
     <div key={day}>
       <h3>{day}</h3>
       {shifts.map((shift) => (
-        <div key={`${day}-${shift}`}>
-          <h4>{shift}</h4>
-          <p>Preferred: {employeeAvailability[day]?.[shift]?.filter(e => e.status === 2).map(e => e.name).join(', ') || 'None'}</p>
-          <p>Available: {employeeAvailability[day]?.[shift]?.filter(e => e.status === 1).map(e => e.name).join(', ') || 'None'}</p>
-          <p>Can't work: {employeeAvailability[day]?.[shift]?.filter(e => e.status === 0).map(e => e.name).join(', ') || 'None'}</p>
-        </div>
+         <div key={`${day}-${shift}`} className="shift-section">
+         <h4>{shift}</h4>
+         <p>Preferred: {availabilityList[day]?.[shift]?.preferred.map(e => e.name).join(', ') || 'None'}</p>
+         <p>Available: {availabilityList[day]?.[shift]?.available.map(e => e.name).join(', ') || 'None'}</p>
+         <p>Can't work: {availabilityList[day]?.[shift]?.cantWork.map(e => e.name).join(', ') || 'None'}</p>
+       </div>
       ))}
     </div>
   ))}

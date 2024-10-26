@@ -56,7 +56,11 @@ const ManagerSchedule: React.FC = () => {
   const [selectedOptionIndex, setSelectedOptionIndex] = useState<number | null>(null);
   // const [selectedSchedule, setSelectedSchedule] = useState<Schedule | null>(null);
   const [employeeAvailability, setEmployeeAvailability] = useState<EmployeeAvailability>({});
-  const [currentWeek, setCurrentWeek] = useState(new Date());
+  const [currentWeek, setCurrentWeek] = useState(() => {
+    const today = new Date();
+    const firstDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + 1));
+    return firstDayOfWeek;
+  });
   const [editMode, setEditMode] = useState(false);
 
   const [availabilityList, setAvailabilityList] = useState<AvailabilityList>({}); //added this one to see if it works
@@ -359,14 +363,14 @@ const getStatusText = (status: number) => {
     <div className="manager-schedule">
       <h1>Manager Schedule</h1>
       <div className="week-navigation">
-        <Button onClick={() => setCurrentWeek(new Date(currentWeek.getTime() - 7 * 24 * 60 * 60 * 1000))}>
-          Previous Week
-        </Button>
-        <span>{currentWeek.toDateString()}</span>
-        <Button onClick={() => setCurrentWeek(new Date(currentWeek.getTime() + 7 * 24 * 60 * 60 * 1000))}>
-          Next Week
-        </Button>
-      </div>
+  <Button onClick={() => setCurrentWeek(new Date(currentWeek.getTime() - 7 * 24 * 60 * 60 * 1000))}>
+    Previous Week
+  </Button>
+  <span>{currentWeek.toDateString()}</span>
+  <Button onClick={() => setCurrentWeek(new Date(currentWeek.getTime() + 7 * 24 * 60 * 60 * 1000))}>
+    Next Week
+  </Button>
+</div>
       <div className="schedule-options">
         {scheduleOptions.map((option, index) => (
           <div key={index} className={`schedule-option ${selectedOptionIndex === index ? 'selected' : ''}`} onClick={() => handleOptionSelect(index)}>

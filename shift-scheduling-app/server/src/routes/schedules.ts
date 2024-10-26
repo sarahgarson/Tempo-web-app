@@ -204,11 +204,49 @@ async function getScheduleOptions(weekStart: string, weekEnd: string) {
 }
 
 
+
+// async function getDetailedEmployeeAvailability(weekStart: string, weekEnd: string) {
+//   console.log('Getting detailed employee availability from', weekStart, 'to', weekEnd);
+//   const result = await pool.query(
+//     `SELECT a.user_id, u.name, a.day_of_week, a.start_time, a.end_time, a.status 
+//      FROM availability a 
+//      JOIN users u ON a.user_id = u.id 
+//      WHERE a.week >= $1 
+//      AND a.week <= $2 
+//      AND u.role = 'employee'`, //added this because the manager was also appearing in the list of employees for some reason 
+     
+//     [weekStart, weekEnd]
+//   );
+//   console.log('Query result:', result.rows);
+
+//   const employeeAvailability: any = {};
+//   result.rows.forEach((row) => {
+//     const { user_id, name, day_of_week, start_time, end_time, status } = row;
+//     if (!employeeAvailability[day_of_week]) {
+//       employeeAvailability[day_of_week] = {};
+//     }
+//     const shift = `${start_time}-${end_time}`;
+//     if (!employeeAvailability[day_of_week][shift]) {
+//       employeeAvailability[day_of_week][shift] = [];
+//     }
+//     employeeAvailability[day_of_week][shift].push({ id: user_id, name, status: Number(status) });
+//   });
+
+//   console.log('Processed employee availability:', employeeAvailability);
+//   return employeeAvailability;
+// }
+
 async function getDetailedEmployeeAvailability(weekStart: string, weekEnd: string) {
   console.log('Getting detailed employee availability from', weekStart, 'to', weekEnd);
   const result = await pool.query(
-    'SELECT a.user_id, u.name, a.day_of_week, a.start_time, a.end_time, a.status FROM availability a JOIN users u ON a.user_id = u.id WHERE a.week >= $1 AND a.week <= $2',
-    [weekStart, weekEnd]
+    `SELECT DISTINCT ON (a.user_id, a.day_of_week, a.start_time, a.end_time) 
+     a.user_id, u.name, a.day_of_week, a.start_time, a.end_time, a.status 
+     FROM availability a 
+     JOIN users u ON a.user_id = u.id 
+     WHERE a.week = $1 
+     AND u.role = 'employee'
+     ORDER BY a.user_id, a.day_of_week, a.start_time, a.end_time, a.week DESC`, 
+    [weekStart]
   );
   console.log('Query result:', result.rows);
 
@@ -228,6 +266,10 @@ async function getDetailedEmployeeAvailability(weekStart: string, weekEnd: strin
   console.log('Processed employee availability:', employeeAvailability);
   return employeeAvailability;
 }
+
+
+
+
 
 router.post('/shuffle', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -250,6 +292,33 @@ router.post('/shuffle', authenticateToken, async (req: Request, res: Response, n
 });
 
 
+// function generateScheduleOption(employeeAvailability: any) {
+//   const schedule: any = {};
+//   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+//   const shifts = ['07:00-16:00', '10:00-19:00', '13:00-22:00'];
+
+//   days.forEach((day, index) => {
+//     schedule[day] = {};
+//     const assignedEmployees = new Set();
+
+//     shifts.forEach(shift => {
+//       const [start, end] = shift.split('-');
+//       const availableEmployees = employeeAvailability[index + 1]?.[`${start}:00-${end}:00`]?.filter((employee: any) => 
+//         (employee.status === 1 || employee.status === 2) && !assignedEmployees.has(employee.id)
+//       ) || [];
+
+//       if (availableEmployees.length > 0) {
+//         const selectedEmployee = availableEmployees[Math.floor(Math.random() * availableEmployees.length)];
+//         schedule[day][shift] = selectedEmployee.id;
+//         assignedEmployees.add(selectedEmployee.id);
+//       } else {
+//         schedule[day][shift] = null;
+//       }
+//     });
+//   });
+
+//   return schedule;
+// }
 function generateScheduleOption(employeeAvailability: any) {
   const schedule: any = {};
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -261,12 +330,18 @@ function generateScheduleOption(employeeAvailability: any) {
 
     shifts.forEach(shift => {
       const [start, end] = shift.split('-');
-      const availableEmployees = employeeAvailability[index + 1]?.[`${start}:00-${end}:00`]?.filter((employee: any) => 
-        (employee.status === 1 || employee.status === 2) && !assignedEmployees.has(employee.id)
-      ) || [];
+      // Only include employees with status 1 or 2 (explicitly filter out status 0)
+      const availableEmployees = employeeAvailability[index + 1]?.[`${start}:00-${end}:00`]?.filter((employee: any) => {
+        return (employee.status === 1 || employee.status === 2) && !assignedEmployees.has(employee.id);
+      }) || [];
 
       if (availableEmployees.length > 0) {
-        const selectedEmployee = availableEmployees[Math.floor(Math.random() * availableEmployees.length)];
+        // Prioritize want to work employees (status 2)
+        const preferredEmployees = availableEmployees.filter((emp: any) => emp.status === 2);
+        const selectedEmployee = preferredEmployees.length > 0 
+          ? preferredEmployees[Math.floor(Math.random() * preferredEmployees.length)]
+          : availableEmployees[Math.floor(Math.random() * availableEmployees.length)];
+        
         schedule[day][shift] = selectedEmployee.id;
         assignedEmployees.add(selectedEmployee.id);
       } else {
@@ -363,8 +438,10 @@ async function getEmployeeAvailabilityList(weekStart: string, weekEnd: string) {
       a.status 
     FROM availability a 
     JOIN users u ON a.user_id = u.id 
-    WHERE a.week >= $1 AND a.week <= $2`,
-    [weekStart, weekEnd]
+    WHERE a.week = $1 
+    AND u.role = 'employee'
+    ORDER BY u.name`,
+    [weekStart]
   );
 
   const availabilityList: any = {};
@@ -386,23 +463,22 @@ async function getEmployeeAvailabilityList(weekStart: string, weekEnd: string) {
     const day = daysOfWeek[row.day_of_week - 1];
     const shift = `${row.start_time.slice(0, 5)}-${row.end_time.slice(0, 5)}`;
     
-    if (availabilityList[day] && availabilityList[day][shift]) {
-      const employee = {
-        id: row.user_id,
-        name: row.name
-      };
+    const employee = {
+      id: row.user_id,
+      name: row.name
+    };
 
-      switch (Number(row.status)) {
-        case 2:
-          availabilityList[day][shift].preferred.push(employee);
-          break;
-        case 1:
-          availabilityList[day][shift].available.push(employee);
-          break;
-        case 0:
-          availabilityList[day][shift].cantWork.push(employee);
-          break;
-      }
+    // Ensure proper categorization based on status
+    switch (Number(row.status)) {
+      case 2:
+        availabilityList[day][shift].preferred.push(employee);
+        break;
+      case 1:
+        availabilityList[day][shift].available.push(employee);
+        break;
+      case 0:
+        availabilityList[day][shift].cantWork.push(employee);
+        break;
     }
   });
 

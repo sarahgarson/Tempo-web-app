@@ -74,6 +74,20 @@ router.post('/login', async (req, res) => {
 router.get('/google',
   passport.authenticate('google', { scope: ['profile', 'email'] }));
 
+// router.get('/google/callback', 
+//   passport.authenticate('google', { failureRedirect: '/login' }),
+//   (req, res) => {
+//     const user = req.user as any;
+//     const token = jwt.sign(
+//       { userId: user.id, role: user.role },
+//       process.env.JWT_SECRET as string,
+//       { expiresIn: '1h' }
+//     );
+//     res.redirect(`http://localhost:3000/auth-callback?token=${token}&role=${user.role}`);
+//   }
+// );
+
+
 router.get('/google/callback', 
   passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
@@ -83,8 +97,18 @@ router.get('/google/callback',
       process.env.JWT_SECRET as string,
       { expiresIn: '1h' }
     );
-    res.redirect(`http://localhost:3000/auth-callback?token=${token}&role=${user.role}`);
+    
+    // Set token in cookie
+    res.cookie('token', token, { httpOnly: true });
+    
+    // Redirect directly to the appropriate page
+    const redirectPath = user.role === 'manager' ? '/manager-schedule' : '/employee-schedule';
+    res.redirect(`https://tempo-frontend.onrender.com${redirectPath}`);
   }
 );
+
+
+
+
 
 export default router;

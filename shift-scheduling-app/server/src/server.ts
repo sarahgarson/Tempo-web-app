@@ -13,7 +13,7 @@ const port = process.env.PORT || 5003;
 
 // CORS configuration
 const corsOptions = {
-  origin: 'http://localhost:3000', 
+  origin: ['http://localhost:3000', 'https://tempo-frontend.onrender.com'],
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -40,12 +40,18 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes
+// Root routes - must be before other routes
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome to Tempo API' });
+});
+
+app.get('/api', (req, res) => {
+  res.json({ message: 'Tempo API is running' });
+});
+
+// API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/schedules', passport.authenticate('jwt', { session: false }), scheduleRoutes);
-app.use('/api', scheduleRoutes);
-
-
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -58,7 +64,7 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// 404 handler
+// 404 handler - must be last
 app.use((req, res) => {
   console.log(`[${new Date().toISOString()}] 404 - Not Found: ${req.method} ${req.url}`);
   res.status(404).send('Route not found');

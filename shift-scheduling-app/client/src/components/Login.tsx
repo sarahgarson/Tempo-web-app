@@ -33,8 +33,10 @@ const Login: React.FC = () => {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:5003/api/auth/google';
+    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5003/api';
+    window.location.href = `${apiUrl}/auth/google`;
   };
+  
 
   return (
     <Container maxWidth="xs" className="login-container">

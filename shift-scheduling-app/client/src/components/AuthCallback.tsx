@@ -1,26 +1,36 @@
-import React, { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
-const AuthCallback: React.FC = () => {
-  const navigate = useNavigate();
+function AuthCallback() {
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const token = params.get('token');
-    const role = params.get('role');
+    console.log('AuthCallback mounted');
+    console.log('Current location:', location);
+    
+    const query = new URLSearchParams(location.search);
+    const token = query.get("token");
+    const role = query.get("role");
+    
+    console.log('Token:', token);
+    console.log('Role:', role);
 
     if (token && role) {
-      localStorage.setItem('token', token);
-      localStorage.setItem('role', role);
-      navigate(role === 'employee' ? '/employee-schedule' : '/manager-schedule');
-    } else {
-      navigate('/login');
+      console.log('Setting credentials');
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role);
+      
+      const path = role === "manager" ? "/manager-schedule" : "/employee-schedule";
+      console.log('Navigating to:', path);
+      navigate(path, { replace: true });
     }
   }, [location, navigate]);
 
-  return <div>Authenticating...</div>;
-};
+  return <div>Processing authentication...</div>;
+}
 
 export default AuthCallback;
+
+
 

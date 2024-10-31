@@ -7,11 +7,17 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Google Strategy
+const callbackURL = process.env.NODE_ENV === 'production'
+  ? 'https://tempo-backend.onrender.com/api/auth/google/callback'
+  : 'http://localhost:5003/api/auth/google/callback';
+
+
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID!,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-  callbackURL: "http://localhost:5003/api/auth/google/callback"
+  callbackURL: callbackURL
 },
+
 async (accessToken, refreshToken, profile, done) => {
   try {
     // First, check if user exists by Google ID

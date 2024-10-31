@@ -5,6 +5,8 @@ import '../styles/ManagerSchedule.css';
 import api from '../utils/api';
 import { useCallback } from 'react';
 
+
+
 interface ScheduleData {
   [day: string]: {
     [shift: string]: number | null;
@@ -126,7 +128,7 @@ const ManagerSchedule: React.FC = () => {
 useEffect(() => {
   const fetchEmployees = async () => {
     try {
-      const response = await api.get('/employees');
+      const response = await api.get('/schedules/employees');
       setEmployees(response.data);
     } catch (error) {
       console.error('Error fetching employees:', error);
@@ -135,6 +137,7 @@ useEffect(() => {
 
   fetchEmployees();
 }, []);
+
 
 
   

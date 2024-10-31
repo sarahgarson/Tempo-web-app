@@ -18,6 +18,8 @@ router.get('/employees', authenticateToken, async (req: Request, res: Response, 
   }
 });
 
+
+
 const processEmployeeAvailability = (queryResult: any[]) => {
   const availability: { [key: string]: { [key: string]: any[] } } = {};
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];

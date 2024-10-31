@@ -52,6 +52,10 @@ app.use((req, res, next) => {
   next();
 });
 
+console.log('Environment:', process.env.NODE_ENV);
+console.log('Port:', process.env.PORT);
+console.log('Starting route registration...');
+
 // Root routes - must be before other routes
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to Tempo API' });
@@ -61,14 +65,25 @@ app.get('/api', (req, res) => {
   res.json({ message: 'Tempo API is running' });
 });
 
-// Add this near your other routes
+//for tests onlyy
 app.get('/test-google-auth', (req, res) => {
-  console.log('Test Google Auth Route reached');
-  res.json({ message: 'Test route for Google Auth is live.' });
+  console.log('Test route hit at:', new Date().toISOString());
+  res.json({ 
+    status: 'active',
+    environment: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/api/auth/google', (req, res) => {
+  console.log('Google auth endpoint hit:', new Date().toISOString());
+  passport.authenticate('google', {
+    scope: ['profile', 'email']
+  })(req, res);
 });
 
 
-console.log('Starting route registration...');
+
 // API routes
 app.use('/api/auth', authRoutes);
 console.log("Auth routes loaded");

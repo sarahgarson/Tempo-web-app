@@ -38,7 +38,7 @@ const Login: React.FC = () => {
   // };
 
   const handleGoogleLogin = () => {
-    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5003/api';
+    const apiUrl = process.env.REACT_APP_API_URL || 'https://tempo-backend.onrender.com/api';
     window.location.href = `${apiUrl}/auth/google`;
   };
   

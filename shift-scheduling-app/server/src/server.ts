@@ -22,12 +22,24 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 // Session configuration
+// app.use(session({
+//   secret: process.env.SESSION_SECRET || 'your_session_secret',
+//   resave: false,
+//   saveUninitialized: false,
+//   cookie: { secure: process.env.NODE_ENV === 'production' }
+// }));
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your_session_secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: process.env.NODE_ENV === 'production' }
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production', 
+    httpOnly: true,
+    sameSite: 'lax'
+  }
 }));
+
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -49,8 +61,17 @@ app.get('/api', (req, res) => {
   res.json({ message: 'Tempo API is running' });
 });
 
+// Add this near your other routes
+app.get('/test-google-auth', (req, res) => {
+  console.log('Test Google Auth Route reached');
+  res.json({ message: 'Test route for Google Auth is live.' });
+});
+
+
+console.log('Starting route registration...');
 // API routes
 app.use('/api/auth', authRoutes);
+console.log("Auth routes loaded");
 app.use('/api/schedules', passport.authenticate('jwt', { session: false }), scheduleRoutes);
 
 // Error handling middleware

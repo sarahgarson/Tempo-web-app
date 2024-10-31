@@ -92,6 +92,7 @@ router.get('/google', passport.authenticate('google', {
 router.get('/google/callback', 
   passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
+    console.log('Google authentication route accessed');
     const user = req.user as any;
     const token = jwt.sign(
       { userId: user.id, role: user.role },
@@ -100,13 +101,20 @@ router.get('/google/callback',
     );
     
     // Set token in cookie
-    res.cookie('token', token, { httpOnly: true });
+//     res.cookie('token', token, { httpOnly: true });
     
-    // Redirect directly to the appropriate page
-    const redirectPath = user.role === 'manager' ? '/manager-schedule' : '/employee-schedule';
-    res.redirect(`https://tempo-frontend.onrender.com${redirectPath}`);
-  }
-);
+//     // Redirect directly to the appropriate page
+//     const redirectPath = user.role === 'manager' ? '/manager-schedule' : '/employee-schedule';
+//     res.redirect(`https://tempo-frontend.onrender.com${redirectPath}`);
+//   }
+// );
+
+res.cookie('token', token, { 
+  httpOnly: true, 
+  secure: process.env.NODE_ENV === 'production', 
+  sameSite: 'lax' 
+});
+  });
 
 
 

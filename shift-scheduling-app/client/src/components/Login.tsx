@@ -32,10 +32,17 @@ const Login: React.FC = () => {
     }
   };
 
+  // const handleGoogleLogin = () => {
+  //   const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5003/api';
+  //   window.location.href = `${apiUrl}/auth/google`;
+  // };
+
   const handleGoogleLogin = () => {
     const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5003/api';
     window.location.href = `${apiUrl}/auth/google`;
   };
+  
+
   
 
   return (

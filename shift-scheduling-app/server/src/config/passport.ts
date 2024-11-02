@@ -23,50 +23,68 @@ passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID!,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
   callbackURL: callbackURL,
-  proxy: true // Adding this for production
+  proxy: true
 },
-
-async (
-  accessToken: string,
-  refreshToken: string,
-  profile: Profile,
-  done: VerifyCallback
-) => {
+async (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
   console.log('Google Strategy Callback Started');
-  console.log('Profile:', {
-    id: profile.id,
-    email: profile.emails?.[0].value,
-    displayName: profile.displayName
-  });
+  
+  if (!profile.emails || !profile.emails[0].value) {
+    console.error('No email provided from Google');
+    return done(new Error('No email provided from Google'));
+  }
 
+  const email = profile.emails[0].value;
+  const googleId = profile.id;
+  const displayName = profile.displayName || email.split('@')[0];
 
   try {
-    // First, check if user exists by Google ID
-    let result = await pool.query('SELECT * FROM users WHERE google_id = $1', [profile.id]);
+    // Transaction to ensure data consistency
+    const client = await pool.connect();
     
-    if (result.rows.length === 0) {
-      // If not found by Google ID, check by email
-      result = await pool.query('SELECT * FROM users WHERE email = $1', [profile.emails![0].value]);
-    }
-
-    if (result.rows.length > 0) {
-      // User exists, update Google ID if it's not set
-      if (!result.rows[0].google_id) {
-        await pool.query('UPDATE users SET google_id = $1 WHERE id = $2', [profile.id, result.rows[0].id]);
-      }
-      return done(null, result.rows[0]);
-    } else {
-      // User doesn't exist, create a new user
-      const newUser = await pool.query(
-        'INSERT INTO users (google_id, email, name, role) VALUES ($1, $2, $3, $4) RETURNING *',
-        [profile.id, profile.emails![0].value, profile.displayName, 'employee']
+    try {
+      await client.query('BEGIN');
+      
+      // Check for existing user
+      let result = await client.query(
+        'SELECT * FROM users WHERE google_id = $1 OR email = $2',
+        [googleId, email]
       );
-      return done(null, newUser.rows[0]);
+
+      let user;
+      
+      if (result.rows.length > 0) {
+        user = result.rows[0];
+        // Update existing user if needed
+        await client.query(
+          'UPDATE users SET google_id = $1, name = $2 WHERE id = $3',
+          [googleId, displayName, user.id]
+        );
+      } else {
+        // Create new user
+        const newUserResult = await client.query(
+          'INSERT INTO users (google_id, email, name, role) VALUES ($1, $2, $3, $4) RETURNING *',
+          [googleId, email, displayName, 'employee']
+        );
+        user = newUserResult.rows[0];
+      }
+
+      await client.query('COMMIT');
+      console.log('User processed successfully:', user);
+      return done(null, user);
+      
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
     }
+    
   } catch (error) {
+    console.error('Database error:', error);
     return done(error as Error);
   }
 }));
+
 
 
 // JWT Strategy

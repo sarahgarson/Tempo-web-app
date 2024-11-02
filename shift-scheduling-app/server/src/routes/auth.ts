@@ -71,9 +71,14 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.get('/google', passport.authenticate('google', {
-  scope: ['profile', 'email']
-}));
+router.get('/google', (req, res, next) => {
+  console.log('[Auth Debug] Google auth route hit');
+  console.log('[Auth Debug] Headers:', req.headers);
+  passport.authenticate('google', {
+    scope: ['profile', 'email']
+  })(req, res, next);
+});
+
 
 // router.get('/google/callback', 
 //   passport.authenticate('google', { failureRedirect: '/login' }),

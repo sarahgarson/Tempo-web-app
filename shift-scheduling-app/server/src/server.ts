@@ -100,6 +100,15 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
+// Adding this before the 404 handler so we can better understand the error we are receiving 
+app.use((req, res, next) => {
+  const route = `${req.method} ${req.path}`;
+  console.log(`[Route Debug] Attempting to access: ${route}`);
+  console.log('[Route Debug] Available routes:', app._router.stack.map((r: any) => r.route?.path).filter(Boolean));
+  next();
+});
+
+
 // 404 handler - must be last
 app.use((req, res) => {
   console.log(`[${new Date().toISOString()}] 404 - Not Found: ${req.method} ${req.url}`);

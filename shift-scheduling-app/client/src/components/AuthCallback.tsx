@@ -10,10 +10,11 @@ const AuthCallback = () => {
     const token = searchParams.get('token');
     const role = searchParams.get('role');
 
-    console.log('Received params:', { 
-      token: token ? 'exists' : 'missing', 
-      role 
-    });
+    // Add more detailed logging
+    console.log('Full URL:', window.location.href);
+    console.log('All Search Params:', Object.fromEntries(searchParams.entries()));
+    console.log('Token:', token);
+    console.log('Role:', role);
 
     if (token && role) {
       console.log('Setting credentials and redirecting...');
@@ -38,6 +39,7 @@ const AuthCallback = () => {
 };
 
 export default AuthCallback;
+
 
 
 

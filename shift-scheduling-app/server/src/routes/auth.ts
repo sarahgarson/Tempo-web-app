@@ -83,27 +83,29 @@ router.get('/google', (req, res, next) => {
 
 
 router.get('/google/callback', 
-passport.authenticate('google', { failureRedirect: '/login' }),
-(req, res) => {
-console.log('Processing Google callback');
- const user = req.user as any;
- const token = jwt.sign(
- { userId: user.id, role: user.role },
-process.env.JWT_SECRET as string,
-{ expiresIn: '1h' }
-);
-// Use localhost URL for development
-const frontendURL = process.env.NODE_ENV === 'development' 
- ? 'http://localhost:3000'
-: process.env.CLIENT_URL;
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  (req, res) => {
+    console.log('Processing Google callback');
+    console.log('User data:', req.user);
+    
+    const user = req.user as any;
+    const token = jwt.sign(
+      { userId: user.id, role: user.role },
+      process.env.JWT_SECRET as string,
+      { expiresIn: '1h' }
+    );
 
-const redirectURL = `${frontendURL}/auth-callback?token=${token}&role=${user.role}`;
-console.log('Environment:', process.env.NODE_ENV);
-console.log('Redirecting to:', redirectURL);
+    const frontendURL = process.env.NODE_ENV === 'production'
+      ? 'https://tempo-frontend.onrender.com'
+      : 'http://localhost:3000';
 
-res.redirect(redirectURL);
-}
+    const redirectURL = `${frontendURL}/auth-callback?token=${token}&role=${user.role}`;
+    console.log('Final redirect URL:', redirectURL);
+
+    res.redirect(redirectURL);
+  }
 );
+
 
 
 

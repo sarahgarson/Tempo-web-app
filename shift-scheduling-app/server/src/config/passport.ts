@@ -11,14 +11,25 @@ const callbackURL = process.env.NODE_ENV === 'production'
   ? 'https://tempo-backend.onrender.com/api/auth/google/callback'
   : 'http://localhost:5003/api/auth/google/callback';
 
+console.log('Configured callback URL:', callbackURL);
+console.log('Environment:', process.env.NODE_ENV);
 
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID!,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-  callbackURL: callbackURL
+  callbackURL: callbackURL,
+  proxy: true // Add this for production
 },
 
 async (accessToken, refreshToken, profile, done) => {
+
+  console.log('Google Strategy Called - Profile:', {
+    id: profile.id,
+    email: profile.emails?.[0]?.value,
+    name: profile.displayName
+  });
+
+
   try {
     // First, check if user exists by Google ID
     let result = await pool.query('SELECT * FROM users WHERE google_id = $1', [profile.id]);

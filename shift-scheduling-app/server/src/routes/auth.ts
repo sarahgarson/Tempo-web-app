@@ -136,12 +136,18 @@ router.get('/google/callback',
       ? 'https://tempo-frontend.onrender.com'
       : 'http://localhost:3000';
 
-    const redirectURL = `${frontendURL}/auth-callback?token=${token}&role=${user.role}`;
+    // Role-based redirect paths
+    const redirectPath = user.role === 'manager' 
+      ? '/manager-schedule'
+      : '/employee-schedule';
+
+    const redirectURL = `${frontendURL}${redirectPath}?token=${token}`;
     console.log('Redirecting to:', redirectURL);
 
     res.redirect(redirectURL);
   }
 );
+
 
 
 

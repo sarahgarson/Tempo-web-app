@@ -141,18 +141,6 @@ router.get('/manager-options', authenticateToken, async (req: Request, res: Resp
 });
 
 
-
-// router.post('/select', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
-//   try {
-//     const { schedules, week, selectedOptionIndex } = req.body;
-//     await saveManagerSchedule(schedules, week, selectedOptionIndex);
-//     res.json({ message: 'Schedules saved successfully' });
-//   } catch (error) {
-//     console.error('Error saving schedules:', error);
-//     res.status(500).json({ message: 'Error saving schedules', error: (error as Error).message });
-//   }
-// });
-
 // Update the route handler to see if I can save my custom schedule table to the database
 router.post('/select', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -217,38 +205,6 @@ async function getScheduleOptions(weekStart: string, weekEnd: string) {
 }
 
 
-
-
-// async function getDetailedEmployeeAvailability(weekStart: string, weekEnd: string) {
-//   console.log('Getting detailed employee availability from', weekStart, 'to', weekEnd);
-//   const result = await pool.query(
-//     `SELECT a.user_id, u.name, a.day_of_week, a.start_time, a.end_time, a.status 
-//      FROM availability a 
-//      JOIN users u ON a.user_id = u.id 
-//      WHERE a.week >= $1 
-//      AND a.week <= $2 
-//      AND u.role = 'employee'`, //added this because the manager was also appearing in the list of employees for some reason 
-     
-//     [weekStart, weekEnd]
-//   );
-//   console.log('Query result:', result.rows);
-
-//   const employeeAvailability: any = {};
-//   result.rows.forEach((row) => {
-//     const { user_id, name, day_of_week, start_time, end_time, status } = row;
-//     if (!employeeAvailability[day_of_week]) {
-//       employeeAvailability[day_of_week] = {};
-//     }
-//     const shift = `${start_time}-${end_time}`;
-//     if (!employeeAvailability[day_of_week][shift]) {
-//       employeeAvailability[day_of_week][shift] = [];
-//     }
-//     employeeAvailability[day_of_week][shift].push({ id: user_id, name, status: Number(status) });
-//   });
-
-//   console.log('Processed employee availability:', employeeAvailability);
-//   return employeeAvailability;
-// }
 
 async function getDetailedEmployeeAvailability(weekStart: string, weekEnd: string) {
   console.log('Getting detailed employee availability from', weekStart, 'to', weekEnd);

@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Environment setup
+// Environment setup for both production and development
 const isProduction = process.env.NODE_ENV === 'production';
 const callbackURL = isProduction
   ? 'https://tempo-web-app.onrender.com/api/auth/google/callback'

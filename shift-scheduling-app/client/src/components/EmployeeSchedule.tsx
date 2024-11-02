@@ -26,27 +26,6 @@ const EmployeeSchedule: React.FC = () => {
 
   const [unsavedChanges, setUnsavedChanges] = useState(false);
 
-  // useEffect(() => {
-  //   const fetchAvailability = async () => {
-  //     try {
-  //       const weekString = formatDateToString(currentWeek);
-  //       const response = await api.get('/schedules/availability', {
-  //         params: { week: weekString },
-  //       });
-  //       if (response.data.length) {
-  //         const formattedAvailability = formatAvailability(response.data);
-  //         dispatch(setAvailability(formattedAvailability));
-  //       } else {
-  //         dispatch(setAvailability({})); // If no data, reset availability
-  //       }
-  //     } catch (error) {
-  //       console.error('Failed to fetch availability:', error);
-  //     }
-  //   };
-  
-  //   fetchAvailability();
-  // }, [currentWeek]);
-  
 
   useEffect(() => {
     fetchAvailability();

@@ -83,26 +83,6 @@ const ManagerSchedule: React.FC = () => {
   const shifts = ['07:00-16:00', '10:00-19:00', '13:00-22:00'];
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-  // Initialize scheduleOptions and customSchedule
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       const response = await api.get('/schedules/manager-options', {
-  //         params: { 
-  //           week: currentWeek.toISOString(),
-  //         },
-  //       });
-  //       setScheduleOptions(response.data.scheduleOptions);
-  //       setEmployeeAvailability(response.data.employeeAvailability);
-  //       console.log('Employee Availability:', response.data.employeeAvailability);
-  //     } catch (error) {
-  //       console.error('Error fetching data:', error);
-  //     }
-  //   };
-  
-  //   fetchData();
-  // }, [currentWeek]);
-
 
 //using this one to see if the list of emmployees works
   useEffect(() => {

@@ -68,11 +68,13 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).send('Route not found');
-});
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
+});
+
+// Move this to be the last middleware after all other routes
+app.use((req, res) => {
+  console.log(`404 Not Found: ${req.method} ${req.url}`);
+  res.status(404).send('Route not found');
 });

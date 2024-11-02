@@ -1,29 +1,30 @@
-import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
-function AuthCallback() {
-  const location = useLocation();
+const AuthCallback = () => {
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const query = new URLSearchParams(location.search);
-    const token = query.get("token");
-    const role = query.get("role");
+    const token = searchParams.get('token');
+    const role = searchParams.get('role');
 
     if (token && role) {
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
+      localStorage.setItem('token', token);
+      localStorage.setItem('role', role);
 
-      // Redirect based on role of the user logging in
-      const path = role === "manager" ? "/manager-schedule" : "/employee-schedule";
-      navigate(path, { replace: true });
+      // Redirect based on role
+      const redirectPath = role === 'manager' ? '/manager-schedule' : '/employee-schedule';
+      navigate(redirectPath, { replace: true });
     }
-  }, [location, navigate]);
+  }, [searchParams, navigate]);
 
-  return <div>Processing authentication...</div>;
-}
+  return <div>Completing authentication...</div>;
+};
 
 export default AuthCallback;
+
+
 
 
 

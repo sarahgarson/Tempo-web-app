@@ -56,6 +56,7 @@ const jwtOptions = {
 
 passport.use(new JwtStrategy(jwtOptions, async (jwt_payload, done) => {
   try {
+    console.log('JWT Strategy: Payload:', jwt_payload);
     const result = await pool.query('SELECT * FROM users WHERE id = $1', [jwt_payload.userId]);
     const user = result.rows[0];
 
@@ -65,11 +66,13 @@ passport.use(new JwtStrategy(jwtOptions, async (jwt_payload, done) => {
       return done(null, false);
     }
   } catch (error) {
+    console.error('JWT Strategy Error:', error);
     return done(error, false);
   }
 }));
 
 passport.serializeUser((user: any, done) => {
+  console.log('Serialize User:', user);
   done(null, user.id);
 });
 

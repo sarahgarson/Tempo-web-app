@@ -1,5 +1,5 @@
 import passport from 'passport';
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import { Strategy as GoogleStrategy, Profile, VerifyCallback } from 'passport-google-oauth20';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import { pool } from './database';
 import dotenv from 'dotenv';
@@ -25,14 +25,12 @@ passport.use(new GoogleStrategy({
   proxy: true // Adding this for production
 },
 
-async (accessToken, refreshToken, profile, done) => {
-
-  console.log('Google Strategy Called - Profile:', {
-    id: profile.id,
-    email: profile.emails?.[0]?.value,
-    name: profile.displayName
-  });
-
+async (
+  accessToken: string,
+  refreshToken: string,
+  profile: Profile,
+  done: VerifyCallback
+) => {
 
   try {
     // First, check if user exists by Google ID

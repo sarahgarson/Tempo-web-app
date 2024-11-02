@@ -13,7 +13,8 @@ export interface User {
 }
 
 export const createUser = async (user: Partial<User>): Promise<User> => {
-  let hashedPassword = null;
+  let hashedPassword: string | null = null;
+  
   if (user.password) {
     hashedPassword = await bcrypt.hash(user.password, 10);
   }

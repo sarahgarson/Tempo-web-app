@@ -4,10 +4,20 @@ import axios from 'axios';
 //   baseURL: 'http://localhost:5003/api',
 // });
 
-const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5003/api',
-});
+const getBaseUrl = () => {
+  if (window.location.hostname === 'localhost') {
+    return 'http://localhost:5003/api';
+  }
+  return 'https://tempo-web-app.onrender.com/api';
+};
 
+const api = axios.create({
+  baseURL: getBaseUrl(),
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
@@ -15,8 +25,6 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
-}, (error) => {
-  return Promise.reject(error);
 });
 
 api.interceptors.response.use((response) => {

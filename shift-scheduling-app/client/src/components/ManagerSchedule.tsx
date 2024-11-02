@@ -103,6 +103,7 @@ const ManagerSchedule: React.FC = () => {
   //   fetchData();
   // }, [currentWeek]);
 
+
 //using this one to see if the list of emmployees works
   useEffect(() => {
     const fetchData = async () => {
@@ -139,8 +140,6 @@ useEffect(() => {
 }, []);
 
 
-
-  
 
   const fetchManagerOptions = useCallback(async () => {
     try {

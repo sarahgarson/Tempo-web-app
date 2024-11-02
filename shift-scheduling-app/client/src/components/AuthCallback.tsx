@@ -25,19 +25,18 @@ const AuthCallback = () => {
         const redirectPath = role === 'manager' ? '/manager-schedule' : '/employee-schedule';
         console.log('Redirecting to:', redirectPath);
         
-        // Force a small delay to ensure state updates are processed
-        await new Promise(resolve => setTimeout(resolve, 100));
         setIsProcessing(false);
-        navigate(redirectPath, { replace: true });
+        // Using window.location.href for direct browser navigation
+        window.location.href = `${window.location.origin}${redirectPath}`;
       } else {
         console.log('Missing token or role');
         setIsProcessing(false);
-        navigate('/login', { replace: true });
+        window.location.href = `${window.location.origin}/login`;
       }
     };
 
     handleAuth();
-  }, [searchParams, navigate]);
+  }, [searchParams]);
 
   return (
     <div style={{ 

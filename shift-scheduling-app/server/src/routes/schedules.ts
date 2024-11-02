@@ -7,6 +7,8 @@ import { AuthenticatedRequest } from '../types';
 const router = express.Router();
 router.use(passport.authenticate('jwt', { session: false }));
 
+
+
 //fetching our employees from the database
 router.get('/employees', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -171,39 +173,49 @@ router.post('/select', authenticateToken, async (req: Request, res: Response, ne
 });
 
 
-//adding console log so we can better track the actions being made during the fetching/saving/creating of the schedule
+
 async function getScheduleOptions(weekStart: string, weekEnd: string) {
   console.log('Getting schedule options from', weekStart, 'to', weekEnd);
   const employeeAvailability = await getDetailedEmployeeAvailability(weekStart, weekEnd);
   console.log('Employee availability:', JSON.stringify(employeeAvailability, null, 2));
 
-  // Check if there are existing options in the database
   const existingOptions = await pool.query(
     'SELECT schedule_data, option_number, is_selected FROM manager_schedules WHERE week = $1 ORDER BY option_number',
     [weekStart]
   );
 
   if (existingOptions.rows.length > 0) {
-    console.log('Returning existing schedule options');
-    return existingOptions.rows.map(row => ({
-      ...row.schedule_data,
-      optionNumber: row.option_number,
-      isSelected: row.is_selected
-    }));
+    // Always generate two options, using existing data for the selected one
+    const selectedOption = existingOptions.rows.find(row => row.is_selected);
+    const newOption = generateScheduleOption(employeeAvailability);
+    
+    return [
+      {
+        ...selectedOption.schedule_data,
+        optionNumber: 1,
+        isSelected: true
+      },
+      {
+        ...newOption,
+        optionNumber: 2,
+        isSelected: false
+      }
+    ];
   }
 
-  // If no existing options, generate new ones
+  // Generate two new options if none exist
   const options = [
     generateScheduleOption(employeeAvailability),
     generateScheduleOption(employeeAvailability)
   ];
-  console.log('Generated new schedule options:', options);
+
   return options.map((option, index) => ({
     ...option,
     optionNumber: index + 1,
     isSelected: false
   }));
 }
+
 
 
 
@@ -399,22 +411,33 @@ async function saveManagerSchedule(schedules: any[], week: string, selectedOptio
   await pool.query('BEGIN');
 
   try {
-    // Delete all existing schedules for this week
-    await pool.query(
-      `DELETE FROM manager_schedules WHERE week = $1`,
+    // Instead of deleting all schedules, update existing ones
+    const existingSchedules = await pool.query(
+      `SELECT * FROM manager_schedules WHERE week = $1`,
       [week]
     );
 
-    // Insert new schedules
-    for (let i = 0; i < schedules.length; i++) {
-      const schedule = schedules[i];
-      console.log(`Saving schedule option ${i}:`, schedule);
-
-      await pool.query(
-        `INSERT INTO manager_schedules (week, year, iso_week, schedule_data, option_number, is_selected)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [week, year, isoWeek, JSON.stringify(schedule.data), i + 1, i === selectedOptionIndex]
-      );
+    // If no existing schedules, insert both options
+    if (existingSchedules.rows.length === 0) {
+      for (let i = 0; i < schedules.length; i++) {
+        const schedule = schedules[i];
+        await pool.query(
+          `INSERT INTO manager_schedules (week, year, iso_week, schedule_data, option_number, is_selected)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [week, year, isoWeek, JSON.stringify(schedule.data), i + 1, i === selectedOptionIndex]
+        );
+      }
+    } else {
+      // Update existing schedules while preserving both options
+      for (let i = 0; i < schedules.length; i++) {
+        const schedule = schedules[i];
+        await pool.query(
+          `UPDATE manager_schedules 
+           SET schedule_data = $1, is_selected = $2
+           WHERE week = $3 AND option_number = $4`,
+          [JSON.stringify(schedule.data), i === selectedOptionIndex, week, i + 1]
+        );
+      }
     }
 
     await pool.query('COMMIT');
@@ -424,6 +447,7 @@ async function saveManagerSchedule(schedules: any[], week: string, selectedOptio
     throw error;
   }
 }
+
 
 //new function for the list availability of the employees in the manager part
 async function getEmployeeAvailabilityList(weekStart: string, weekEnd: string) {

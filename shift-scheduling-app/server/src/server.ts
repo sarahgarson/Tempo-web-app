@@ -5,10 +5,13 @@ import passport from './config/passport';
 import authRoutes from './routes/auth';
 import scheduleRoutes from './routes/schedules';
 import session from 'express-session';
+import connectPgSimple from 'connect-pg-simple';
+import { pool } from './config/database';
 
 dotenv.config();
 
 const app = express();
+const pgSession = connectPgSimple(session);
 
 app.use((req, res, next) => {
   console.log('Incoming request:', {
@@ -32,11 +35,11 @@ const corsOptions = {
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 };
 
-
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Session configuration
+
+// Reverted to this simpler session configuration because it was affecting the tables data
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your_session_secret',
   resave: false,
@@ -44,9 +47,10 @@ app.use(session({
   cookie: { 
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    sameSite: 'none' // Adjusted to 'none' because the frontend and backend are on different origins
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
   }
 }));
+
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -57,7 +61,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Add this as the first route after middleware setup
+// Health check route
 app.get('/health', (req, res) => {
   res.json({
     status: 'up',
@@ -66,9 +70,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-
-//test
-// Add this before your error handling middleware
+// Test route
 app.get('/api/auth/test', (req, res) => {
   res.json({
     message: 'Auth routes accessible',
@@ -76,7 +78,6 @@ app.get('/api/auth/test', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
-
 
 // Root routes
 app.get('/', (req, res) => res.json({ message: 'Welcome to Tempo API' }));
@@ -91,8 +92,6 @@ app.get('/test-google-auth', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/schedules', passport.authenticate('jwt', { session: false }), scheduleRoutes);
 
-
-
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Server error:', err);
@@ -104,13 +103,13 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
 
-// Move this to be the last middleware after all other routes
+// 404 handler
 app.use((req, res) => {
   console.log(`404 Not Found: ${req.method} ${req.url}`);
   res.status(404).send('Route not found');
 });
+

@@ -73,28 +73,6 @@ router.post('/login', async (req, res) => {
 
 
 // Google OAuth routes
-// router.get('/google', (req, res, next) => {
-//   console.log('[OAuth] Initial Google route accessed');
-//   passport.authenticate('google', {
-//       scope: ['profile', 'email']
-//   })(req, res, next);
-// });
-
-// router.get('/google/callback', (req, res, next) => {
-//   console.log('[OAuth] Callback route accessed');
-//   passport.authenticate('google', { failureRedirect: '/login' })(req, res, next);
-// }, (req, res) => {
-//   const user = req.user as any;
-//   const token = jwt.sign(
-//       { userId: user.id, role: user.role },
-//       process.env.JWT_SECRET as string,
-//       { expiresIn: '1h' }
-//   );
-
-//   const frontendURL = process.env.CLIENT_URL || 'http://localhost:3000';
-//   res.redirect(`${frontendURL}/auth-callback?token=${token}&role=${user.role}`);
-// });
-
 router.get('/google', (req, res, next) => {
   passport.authenticate('google', {
     scope: ['profile', 'email'],
@@ -104,10 +82,49 @@ router.get('/google', (req, res, next) => {
 
 
 
+// router.get('/google/callback', 
+//   passport.authenticate('google', { failureRedirect: '/login' }),
+//   (req, res) => {
+//     console.log('Processing Google callback');
+//     const user = req.user as any;
+//     const token = jwt.sign(
+//       { userId: user.id, role: user.role },
+//       process.env.JWT_SECRET as string,
+//       { expiresIn: '1h' }
+//     );
+
+//     // Use localhost URL for development
+//     const frontendURL = process.env.NODE_ENV === 'development' 
+//  //     ? 'http://localhost:3000'
+//       : process.env.CLIENT_URL;
+
+//     const redirectURL = `${frontendURL}/auth-callback?token=${token}&role=${user.role}`;
+//     console.log('Environment:', process.env.NODE_ENV);
+//     console.log('Redirecting to:', redirectURL);
+
+//     res.redirect(redirectURL);
+//   }
+// );
+
 router.get('/google/callback', 
-  passport.authenticate('google', { failureRedirect: '/login' }),
+  (req, res, next) => {
+    console.log('Google callback received:', {
+      query: req.query,
+      headers: req.headers
+    });
+    passport.authenticate('google', { 
+      failureRedirect: '/login',
+      session: false 
+    })(req, res, next);
+  },
   (req, res) => {
-    console.log('Processing Google callback');
+    console.log('User from passport:', req.user);
+    
+    if (!req.user) {
+      console.error('No user data received from Google');
+      return res.redirect('/login?error=auth_failed');
+    }
+
     const user = req.user as any;
     const token = jwt.sign(
       { userId: user.id, role: user.role },
@@ -115,29 +132,16 @@ router.get('/google/callback',
       { expiresIn: '1h' }
     );
 
-    // Use localhost URL for development
-    const frontendURL = process.env.NODE_ENV === 'development' 
-      ? 'http://localhost:3000'
-      : process.env.CLIENT_URL;
+    const frontendURL = process.env.NODE_ENV === 'production'
+      ? 'https://tempo-frontend.onrender.com'
+      : 'http://localhost:3000';
 
     const redirectURL = `${frontendURL}/auth-callback?token=${token}&role=${user.role}`;
-    console.log('Environment:', process.env.NODE_ENV);
     console.log('Redirecting to:', redirectURL);
 
     res.redirect(redirectURL);
   }
 );
-
-
-    
-    // Set token in cookie
-//     res.cookie('token', token, { httpOnly: true });
-    
-     // Redirect directly to the appropriate page
-//     const redirectPath = user.role === 'manager' ? '/manager-schedule' : '/employee-schedule';
-//     res.redirect(`https://tempo-frontend.onrender.com${redirectPath}`);
-//   }
-// );
 
 
 

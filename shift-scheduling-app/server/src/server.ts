@@ -9,6 +9,17 @@ import session from 'express-session';
 dotenv.config();
 
 const app = express();
+
+app.use((req, res, next) => {
+  console.log('Incoming request:', {
+    path: req.path,
+    method: req.method,
+    headers: req.headers,
+    timestamp: new Date().toISOString()
+  });
+  next();
+});
+
 const port = process.env.PORT || 5003;
 
 // CORS configuration
@@ -45,6 +56,27 @@ app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
+
+// Add this as the first route after middleware setup
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'up',
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV
+  });
+});
+
+
+//test
+// Add this before your error handling middleware
+app.get('/api/auth/test', (req, res) => {
+  res.json({
+    message: 'Auth routes accessible',
+    environment: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
+});
+
 
 // Root routes
 app.get('/', (req, res) => res.json({ message: 'Welcome to Tempo API' }));

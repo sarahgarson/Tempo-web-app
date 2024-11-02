@@ -4,12 +4,12 @@
   "private": true,
   "proxy": "http://localhost:5003",
   "homepage": "https://tempo-frontend.onrender.com",
-  
   "dependencies": {
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@mui/icons-material": "^6.1.2",
     "@mui/material": "^6.1.2",
+    "@react-oauth/google": "^0.12.1",
     "@reduxjs/toolkit": "^2.2.8",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
@@ -59,5 +59,4 @@
     "ajv": "^8.17.1",
     "eslint-config-react-app": "^7.0.1"
   }
-  
 }

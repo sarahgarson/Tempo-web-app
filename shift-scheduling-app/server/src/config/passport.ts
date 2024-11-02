@@ -10,8 +10,9 @@ dotenv.config();
 // Google Strategy
 const isProduction = process.env.NODE_ENV === 'production';
 const callbackURL = isProduction
-  ? 'https://tempo-backend.onrender.com/api/auth/google/callback'
-  : 'http://localhost:5003/api/auth/google/callback';
+? 'https://tempo-web-app.onrender.com/api/auth/google/callback'
+: 'http://localhost:5003/api/auth/google/callback';
+
 
 console.log('Current environment:', process.env.NODE_ENV);
 console.log('Is Production:', isProduction);
@@ -31,6 +32,13 @@ async (
   profile: Profile,
   done: VerifyCallback
 ) => {
+  console.log('Google Strategy Callback Started');
+  console.log('Profile:', {
+    id: profile.id,
+    email: profile.emails?.[0].value,
+    displayName: profile.displayName
+  });
+
 
   try {
     // First, check if user exists by Google ID

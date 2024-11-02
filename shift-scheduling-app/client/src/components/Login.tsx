@@ -36,14 +36,36 @@ const Login: React.FC = () => {
   //   const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5003/api';
   //   window.location.href = `${apiUrl}/auth/google`;
   // };
-  const handleGoogleLogin = () => {
-    const apiUrl = process.env.REACT_APP_API_URL;
-    console.log('Starting Google OAuth flow with URL:', apiUrl);
-    window.location.href = `${apiUrl}/auth/google`;
-};
 
+
+  // const handleGoogleLogin = () => {
+  //   const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5003/api';
+  //   const googleAuthUrl = `${apiUrl}/auth/google`;
+    
+  //   console.log('API URL:', apiUrl);
+  //   console.log('Google Auth URL:', googleAuthUrl);
+    
+  //   window.location.href = googleAuthUrl;
+  // };
   
 
+  const handleGoogleLogin = () => {
+    console.log('Current hostname:', window.location.hostname);
+    
+    const apiUrl = window.location.hostname === 'localhost'
+      ? 'http://localhost:5003/api'
+      : 'https://tempo-web-app.onrender.com/api';
+        
+    console.log('Using API URL:', apiUrl);
+    const googleAuthUrl = `${apiUrl}/auth/google`;
+    console.log('Redirecting to:', googleAuthUrl);
+    
+    window.location.href = googleAuthUrl;
+  };
+  
+  
+  
+  
   return (
     <Container maxWidth="xs" className="login-container">
       <Typography variant="h4" className="login-title">Scheduling Shifts Login</Typography>

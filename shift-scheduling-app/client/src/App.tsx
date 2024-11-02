@@ -5,9 +5,11 @@ import EmployeeSchedule from './components/EmployeeSchedule';
 import ManagerSchedule from './components/ManagerSchedule';
 import PrivateRoute from './components/PrivateRoute';
 import AuthCallback from './components/AuthCallback';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 const App: React.FC = () => {
   return (
+    
     <Routes>
     <Route path="/login" element={<Login />} />
     <Route path="/auth-callback" element={<AuthCallback />} />

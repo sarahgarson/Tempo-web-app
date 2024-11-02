@@ -96,13 +96,13 @@ router.post('/login', async (req, res) => {
 // });
 
 router.get('/google', (req, res, next) => {
-  console.log('Google auth initiation - Headers:', req.headers);
-  console.log('Google auth initiation - URL:', req.url);
   passport.authenticate('google', {
-      scope: ['profile', 'email'],
-      prompt: 'select_account'
+    scope: ['profile', 'email'],
+    prompt: 'select_account',
+    accessType: 'offline'
   })(req, res, next);
 });
+
 
 
 router.get('/google/callback', 

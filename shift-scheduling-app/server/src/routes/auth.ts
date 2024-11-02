@@ -71,52 +71,29 @@ router.post('/login', async (req, res) => {
   }
 });
 
+
+// Google OAuth routes
 router.get('/google', (req, res, next) => {
-  console.log('[Auth Debug] Google auth route hit');
-  console.log('[Auth Debug] Headers:', req.headers);
+  console.log('[OAuth] Initial Google route accessed');
   passport.authenticate('google', {
-    scope: ['profile', 'email']
+      scope: ['profile', 'email']
   })(req, res, next);
 });
 
-
-// router.get('/google/callback', 
-//   passport.authenticate('google', { failureRedirect: '/login' }),
-//   (req, res) => {
-//     const user = req.user as any;
-//     const token = jwt.sign(
-//       { userId: user.id, role: user.role },
-//       process.env.JWT_SECRET as string,
-//       { expiresIn: '1h' }
-//     );
-//     res.redirect(`http://localhost:3000/auth-callback?token=${token}&role=${user.role}`);
-//   }
-// );
-
-
-router.get('/google/callback', 
-  passport.authenticate('google', { failureRedirect: '/login' }),
-  (req, res) => {
-    console.log('Google authentication callback accessed');
-    const user = req.user as any;
-    const token = jwt.sign(
+router.get('/google/callback', (req, res, next) => {
+  console.log('[OAuth] Callback route accessed');
+  passport.authenticate('google', { failureRedirect: '/login' })(req, res, next);
+}, (req, res) => {
+  const user = req.user as any;
+  const token = jwt.sign(
       { userId: user.id, role: user.role },
       process.env.JWT_SECRET as string,
       { expiresIn: '1h' }
-    );
+  );
 
-    // Set cookie
-    res.cookie('token', token, { 
-      httpOnly: true, 
-      secure: process.env.NODE_ENV === 'production', 
-      sameSite: 'none' 
-    });
-
-    // Redirect to frontend
-    const frontendURL = process.env.CLIENT_URL || 'http://localhost:3000';
-    res.redirect(`${frontendURL}/auth-callback?token=${token}&role=${user.role}`);
-  }
-);
+  const frontendURL = process.env.CLIENT_URL || 'http://localhost:3000';
+  res.redirect(`${frontendURL}/auth-callback?token=${token}&role=${user.role}`);
+});
 
 
     

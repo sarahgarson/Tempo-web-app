@@ -6,19 +6,23 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+
 // Google Strategy
-const callbackURL = process.env.NODE_ENV === 'production'
+const isProduction = process.env.NODE_ENV === 'production';
+const callbackURL = isProduction
   ? 'https://tempo-backend.onrender.com/api/auth/google/callback'
   : 'http://localhost:5003/api/auth/google/callback';
 
-console.log('Configured callback URL:', callbackURL);
-console.log('Environment:', process.env.NODE_ENV);
+console.log('Current environment:', process.env.NODE_ENV);
+console.log('Is Production:', isProduction);
+console.log('Using callback URL:', callbackURL);
+
 
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID!,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
   callbackURL: callbackURL,
-  proxy: true // Add this for production
+  proxy: true // Adding this for production
 },
 
 async (accessToken, refreshToken, profile, done) => {

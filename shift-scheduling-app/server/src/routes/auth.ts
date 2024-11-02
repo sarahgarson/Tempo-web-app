@@ -97,13 +97,28 @@ router.get('/google', (req, res, next) => {
 router.get('/google/callback', 
   passport.authenticate('google', { failureRedirect: '/login' }),
   (req, res) => {
-    console.log('Google authentication route accessed');
+    console.log('Google authentication callback accessed');
     const user = req.user as any;
     const token = jwt.sign(
       { userId: user.id, role: user.role },
       process.env.JWT_SECRET as string,
       { expiresIn: '1h' }
     );
+
+    // Set cookie
+    res.cookie('token', token, { 
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === 'production', 
+      sameSite: 'lax' 
+    });
+
+    // Redirect to frontend
+    const frontendURL = process.env.CLIENT_URL || 'http://localhost:3000';
+    res.redirect(`${frontendURL}/auth-callback?token=${token}&role=${user.role}`);
+  }
+);
+
+
     
     // Set token in cookie
 //     res.cookie('token', token, { httpOnly: true });
@@ -113,14 +128,6 @@ router.get('/google/callback',
 //     res.redirect(`https://tempo-frontend.onrender.com${redirectPath}`);
 //   }
 // );
-
-res.cookie('token', token, { 
-  httpOnly: true, 
-  secure: process.env.NODE_ENV === 'production', 
-  sameSite: 'lax' 
-});
-  });
-
 
 
 

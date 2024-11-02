@@ -39,12 +39,10 @@ const Login: React.FC = () => {
 
   const handleGoogleLogin = () => {
     const apiUrl = process.env.REACT_APP_API_URL;
-    // Adding logging to track the URL being used cause it was mismatching with the server URL
-    console.log('Google login redirect URL:', `${apiUrl}/auth/google/callback`);
-    window.location.href = `${apiUrl}/auth/google/callback`;
+    console.log('Google login redirect URL:', `${apiUrl}/auth/google`);
+    window.location.href = `${apiUrl}/auth/google`;
 };
 
-  
   
 
   return (

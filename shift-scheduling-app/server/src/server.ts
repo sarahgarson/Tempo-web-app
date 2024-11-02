@@ -56,6 +56,18 @@ console.log('Environment:', process.env.NODE_ENV);
 console.log('Port:', process.env.PORT);
 console.log('Starting route registration...');
 
+// to troubleshoot the 404 error
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] Route accessed:`, {
+    method: req.method,
+    path: req.path,
+    query: req.query,
+    headers: req.headers
+  });
+  next();
+});
+
+
 // Root routes - must be before other routes
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to Tempo API' });
@@ -74,14 +86,6 @@ app.get('/test-google-auth', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
-
-app.get('/api/auth/google', (req, res) => {
-  console.log('Google auth endpoint hit:', new Date().toISOString());
-  passport.authenticate('google', {
-    scope: ['profile', 'email']
-  })(req, res);
-});
-
 
 
 // API routes

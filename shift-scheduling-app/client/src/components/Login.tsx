@@ -68,7 +68,7 @@ const Login: React.FC = () => {
   
   return (
     <Container maxWidth="xs" className="login-container">
-      <Typography variant="h4" className="login-title">Scheduling Shifts Login</Typography>
+      <Typography variant="h4" className="login-title">Tempo Web Application</Typography>
       <form onSubmit={handleLogin} className="login-form">
         <TextField
           label="Email"

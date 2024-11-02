@@ -69,3 +69,7 @@ EXECUTE FUNCTION enforce_single_selected_schedule();
 -- Insert initial manager user
 INSERT INTO users (email, password, name, role, username)
 VALUES ('sarah.garson.santos@gmail.com', '12345', 'Sarah Garson', 'manager', 'sarahgarson');
+
+
+-- Updateed manager role
+UPDATE users SET role = 'manager' WHERE email = 'sasa.garson.santos@gmail.com';

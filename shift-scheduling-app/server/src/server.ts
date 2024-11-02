@@ -13,10 +13,14 @@ const port = process.env.PORT || 5003;
 
 // CORS configuration
 const corsOptions = {
-  origin: ['http://localhost:3000', 'https://tempo-frontend.onrender.com'],
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://tempo-frontend.onrender.com']
+    : ['http://localhost:3000'],
   credentials: true,
   optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 };
+
 
 app.use(cors(corsOptions));
 app.use(express.json());

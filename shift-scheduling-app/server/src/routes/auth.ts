@@ -57,19 +57,26 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    // Add explicit role check logging
+    console.log('Creating token with role:', user.role);
+    
     const token = jwt.sign(
       { userId: user.id, role: user.role },
       process.env.JWT_SECRET as string,
       { expiresIn: '1h' }
     );
 
-    console.log('Login successful');
-    res.json({ token, userId: user.id, role: user.role });
+    // Log the complete response object
+    const response = { token, userId: user.id, role: user.role };
+    console.log('Sending response:', response);
+
+    res.json(response);
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Error logging in', error: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
+
 
 
 // Google OAuth routes

@@ -40,14 +40,26 @@ app.use(express.json());
 
 
 // Reverted to this simpler session configuration because it was affecting the tables data
+// app.use(session({
+//   secret: process.env.SESSION_SECRET || 'your_session_secret',
+//   resave: false,
+//   saveUninitialized: false,
+//   cookie: { 
+//     secure: process.env.NODE_ENV === 'production',
+//     httpOnly: true,
+//     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+//   }
+// }));
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your_session_secret',
   resave: false,
   saveUninitialized: false,
   cookie: { 
-    secure: process.env.NODE_ENV === 'production',
+    secure: true, // Always true for production thats important
     httpOnly: true,
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    sameSite: 'none', // Required for cross-site cookies
+    maxAge: 24 * 60 * 60 * 1000 
   }
 }));
 

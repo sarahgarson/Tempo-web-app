@@ -16,38 +16,28 @@ const Login: React.FC = () => {
     try {
       const response = await api.post('/auth/login', { email, password });
       
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('role', response.data.role);
+      const { token, role } = response.data;
+      console.log('Received role:', role); // Debug log
+      
+      localStorage.setItem('token', token);
+      localStorage.setItem('role', role);
 
-      console.log('Token stored:', response.data.token);
-
-      if (response.data.role === 'employee') {
+      if (role === 'manager') {
+        console.log('Redirecting to manager dashboard');
+        navigate('/manager-schedule');
+      } else if (role === 'employee') {
+        console.log('Redirecting to employee dashboard');
         navigate('/employee-schedule');
       } else {
-        navigate('/manager-schedule');
+        console.log('Unknown role:', role);
       }
     } catch (error) {
       console.error('Login failed:', error);
       alert('Login failed. Please check your credentials and try again.');
     }
-  };
-
-  // const handleGoogleLogin = () => {
-  //   const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5003/api';
-  //   window.location.href = `${apiUrl}/auth/google`;
-  // };
+};
 
 
-  // const handleGoogleLogin = () => {
-  //   const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5003/api';
-  //   const googleAuthUrl = `${apiUrl}/auth/google`;
-    
-  //   console.log('API URL:', apiUrl);
-  //   console.log('Google Auth URL:', googleAuthUrl);
-    
-  //   window.location.href = googleAuthUrl;
-  // };
-  
 
   const handleGoogleLogin = () => {
     console.log('Current hostname:', window.location.hostname);

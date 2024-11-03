@@ -66,9 +66,9 @@ BEFORE INSERT OR UPDATE ON manager_schedules
 FOR EACH ROW
 EXECUTE FUNCTION enforce_single_selected_schedule();
 
--- Insert initial manager user
+-- Insert initial employee user
 INSERT INTO users (email, password, name, role, username)
-VALUES ('sarah.garson.santos@gmail.com', '12345', 'Sarah Garson', 'manager', 'sarahgarson');
+VALUES ('sarah.garson.santos@gmail.com', '12345', 'Sarah Garson', 'employee', 'sarahgarson');
 
 
 -- Updateed manager role

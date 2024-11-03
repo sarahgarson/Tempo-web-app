@@ -17,7 +17,8 @@ const Login: React.FC = () => {
       const response = await api.post('/auth/login', { email, password });
       
       const { token, role } = response.data;
-      console.log('Received role:', role); // Debug log
+      console.log('Received role:', role); // Debugging for roles redirecting users to the correct dashboard
+      console.log('Response data:', response.data);
       
       localStorage.setItem('token', token);
       localStorage.setItem('role', role);

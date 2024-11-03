@@ -73,3 +73,16 @@ VALUES ('sarah.garson.santos@gmail.com', '12345', 'Sarah Garson', 'employee', 's
 
 -- Updateed manager role
 UPDATE users SET role = 'manager' WHERE email = 'sasa.garson.santos@gmail.com';
+
+
+--troubleshooting redirection for users roles
+
+--to check the current user set up
+SELECT * FROM users WHERE email = 'sarah.garson.santos@gmail.com';
+
+-- inserting users again to make sure deploy sees them
+INSERT INTO users (email, password, role) VALUES 
+('john.bonjovi@gmail.com', 'hashedpassword', 'employee'),
+('beyonce.pop@gmail.com', 'hashedpassword', 'employee'),
+('sarah.garson.santos@gmail.com', 'hashedpassword', 'employee');
+

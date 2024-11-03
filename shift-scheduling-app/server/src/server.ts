@@ -38,19 +38,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-
-// Reverted to this simpler session configuration because it was affecting the tables data
-// app.use(session({
-//   secret: process.env.SESSION_SECRET || 'your_session_secret',
-//   resave: false,
-//   saveUninitialized: false,
-//   cookie: { 
-//     secure: process.env.NODE_ENV === 'production',
-//     httpOnly: true,
-//     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-//   }
-// }));
-
+// Session configuration
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your_session_secret',
   resave: false,

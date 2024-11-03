@@ -42,6 +42,15 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    // Add role validation here
+    if (user && user.role) {
+      console.log('Original user role:', user.role);
+      if (!['employee', 'manager'].includes(user.role)) {
+        user.role = 'employee';
+        console.log('Invalid role detected, defaulting to:', user.role);
+      }
+    }
+
     console.log('User found:', { id: user.id, email: user.email, role: user.role });
 
     if (user.password === null) {
@@ -56,8 +65,8 @@ router.post('/login', async (req, res) => {
       console.log('Password does not match');
       return res.status(401).json({ message: 'Invalid credentials' });
     }
-
-    // Add explicit role check logging
+    console.log('User role from database:', user.role);
+    console.log('User ID from database:', user.id);
     console.log('Creating token with role:', user.role);
     
     const token = jwt.sign(
@@ -66,7 +75,6 @@ router.post('/login', async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    // Log the complete response object
     const response = { token, userId: user.id, role: user.role };
     console.log('Sending response:', response);
 
@@ -76,6 +84,7 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ message: 'Error logging in', error: error instanceof Error ? error.message : 'Unknown error' });
   }
 });
+
 
 
 

@@ -26,9 +26,15 @@ export const createUser = async (user: Partial<User>): Promise<User> => {
   return result.rows[0];
 };
 
-export const getUserByEmail = async (email: string): Promise<User | null> => {
-  const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-  return result.rows[0] || null;
+export const getUserByEmail = async (email: string) => {
+  try {
+    console.log('Querying user by email:', email);
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    return result.rows[0];
+  } catch (error) {
+    console.error('Error in getUserByEmail:', error);
+    throw error;
+  }
 };
 
 export const validatePassword = async (user: User, password: string): Promise<boolean> => {
@@ -37,11 +43,17 @@ export const validatePassword = async (user: User, password: string): Promise<bo
     return false;
   }
 
+  console.log('Validating password for user:', user.email);
+
   if (user.password.startsWith('$2b$') || user.password.startsWith('$2a$')) {
-    // Password is hashed, use bcrypt compare
-    return bcrypt.compare(password, user.password);
+     // Password is hashed, use bcrypt compare
+     const isValid = await bcrypt.compare(password, user.password);
+     console.log('Password validation result (hashed):', isValid);
+     return isValid;
   } else {
     // Password is not hashed, do a direct comparison
+    const isValid = user.password === password;
+    console.log('Password validation result (plain):', isValid);
     return user.password === password;
   }
 };

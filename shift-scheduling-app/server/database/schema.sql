@@ -92,3 +92,15 @@ INSERT INTO users (email, password, name, role, username, google_id)
 VALUES 
     ('sasa.garson.santos@gmail.com', NULL, 'Sasa Garson', 'manager', 'sasagarson', '117571476391017283917')
 ON CONFLICT (email) DO NOTHING;
+
+--no password set for the employees: want to set it like this instead of hashing it
+UPDATE users
+SET password = '123456'
+WHERE email = 'john.bonjovi@gmail.com';
+
+UPDATE users
+SET password = '1234567'
+WHERE email = 'beyonce.pop@gmail.com';
+
+INSERT INTO users (email, password, name, created_at, role, username)
+VALUES ('testing.manager@google.com', '12345678', 'Testing Manager', NOW(), 'manager', 'testingmanager');

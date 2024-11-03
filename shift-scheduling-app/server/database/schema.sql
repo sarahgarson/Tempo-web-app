@@ -1,5 +1,5 @@
 -- Users table
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
   password VARCHAR(255),
@@ -11,7 +11,7 @@ CREATE TABLE users (
 );
 
 -- Availability table
-CREATE TABLE availability (
+CREATE TABLE IF NOT EXISTS availability (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id),
   week DATE,
@@ -24,12 +24,12 @@ CREATE TABLE availability (
 );
 
 -- Indexes and constraints for availability
-CREATE INDEX idx_availability_user_week ON availability(user_id, week);
+CREATE INDEX IF NOT EXISTS idx_availability_user_week ON availability(user_id, week);
 ALTER TABLE availability ADD CONSTRAINT unique_availability 
   UNIQUE (user_id, week, day_of_week, start_time, end_time);
 
 -- Manager schedules table
-CREATE TABLE manager_schedules (
+CREATE TABLE IF NOT EXISTS manager_schedules (
   id SERIAL PRIMARY KEY,
   week DATE NOT NULL,
   year INTEGER NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE manager_schedules (
 );
 
 -- Indexes and constraints for manager_schedules
-CREATE INDEX idx_manager_schedules_week ON manager_schedules(week);
+CREATE INDEX IF NOT EXISTS idx_manager_schedules_week ON manager_schedules(week);
 ALTER TABLE manager_schedules ADD CONSTRAINT unique_selected_schedule 
   UNIQUE (week, is_selected);
 ALTER TABLE manager_schedules ADD CONSTRAINT manager_schedules_week_option_number_key 
@@ -61,28 +61,34 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create trigger
-CREATE TRIGGER ensure_single_selected_schedule
+CREATE TRIGGER IF NOT EXISTS ensure_single_selected_schedule
 BEFORE INSERT OR UPDATE ON manager_schedules
 FOR EACH ROW
 EXECUTE FUNCTION enforce_single_selected_schedule();
 
 -- Insert initial employee user
 INSERT INTO users (email, password, name, role, username)
-VALUES ('sarah.garson.santos@gmail.com', '12345', 'Sarah Garson', 'employee', 'sarahgarson');
+VALUES ('sarah.garson.santos@gmail.com', '12345', 'Sarah Garson', 'employee', 'sarahgarson')
+ON CONFLICT (email) DO NOTHING;
 
-
--- Updateed manager role
+-- Updated manager role
 UPDATE users SET role = 'manager' WHERE email = 'sasa.garson.santos@gmail.com';
 
-
---troubleshooting redirection for users roles
-
---to check the current user set up
+-- Troubleshooting redirection for users roles
+-- To check the current user set up
 SELECT * FROM users WHERE email = 'sarah.garson.santos@gmail.com';
 
--- inserting users again to make sure deploy sees them
-INSERT INTO users (email, password, role) VALUES 
-('john.bonjovi@gmail.com', 'hashedpassword', 'employee'),
-('beyonce.pop@gmail.com', 'hashedpassword', 'employee'),
-('sarah.garson.santos@gmail.com', 'hashedpassword', 'employee');
+-- Inserting users again to make sure deploy sees them
+INSERT INTO users (email, password, name, role, username)
+VALUES 
+    ('sarah.garson.santos@gmail.com', 'hashedpassword', 'Sarah Garson', 'employee', 'sarahgarson'),
+    ('john.bonjovi@gmail.com', 'hashedpassword', 'John Bon Jovi', 'employee', 'johnbonjovi'),
+    ('beyonce.pop@gmail.com', 'hashedpassword', 'Beyoncé', 'employee', 'beyoncepop')
+ON CONFLICT (email) DO NOTHING;
 
+
+-- Inserting manager user
+INSERT INTO users (email, password, name, role, username, google_id)
+VALUES 
+    ('sasa.garson.santos@gmail.com', NULL, 'Sasa Garson', 'manager', 'sasagarson', '117571476391017283917')
+ON CONFLICT (email) DO NOTHING;

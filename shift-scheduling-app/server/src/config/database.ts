@@ -8,7 +8,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 export const pool = new Pool(
   isProduction
     ? {
-        connectionString: 'postgresql://tempo_user:mvVOmmkdZ5W58iboda5vjA5weiYsUOsm@dpg-csghnstumphs73b5rleg-a.frankfurt-postgres.render.com/tempo_database',
+        connectionString: 'postgresql://sarahgarson:CTemuEUDuyiK6lbYXeAQFafFuamEkPnG@dpg-csjkl723esus73863vag-a/shift_scheduling_app',
         ssl: {
           rejectUnauthorized: false
         }

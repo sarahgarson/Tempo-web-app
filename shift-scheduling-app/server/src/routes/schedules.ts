@@ -262,33 +262,6 @@ router.post('/shuffle', authenticateToken, async (req: Request, res: Response, n
 });
 
 
-// function generateScheduleOption(employeeAvailability: any) {
-//   const schedule: any = {};
-//   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-//   const shifts = ['07:00-16:00', '10:00-19:00', '13:00-22:00'];
-
-//   days.forEach((day, index) => {
-//     schedule[day] = {};
-//     const assignedEmployees = new Set();
-
-//     shifts.forEach(shift => {
-//       const [start, end] = shift.split('-');
-//       const availableEmployees = employeeAvailability[index + 1]?.[`${start}:00-${end}:00`]?.filter((employee: any) => 
-//         (employee.status === 1 || employee.status === 2) && !assignedEmployees.has(employee.id)
-//       ) || [];
-
-//       if (availableEmployees.length > 0) {
-//         const selectedEmployee = availableEmployees[Math.floor(Math.random() * availableEmployees.length)];
-//         schedule[day][shift] = selectedEmployee.id;
-//         assignedEmployees.add(selectedEmployee.id);
-//       } else {
-//         schedule[day][shift] = null;
-//       }
-//     });
-//   });
-
-//   return schedule;
-// }
 function generateScheduleOption(employeeAvailability: any) {
   const schedule: any = {};
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];

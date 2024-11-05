@@ -14,14 +14,3 @@ export function isAuthenticatedRequest(req: Request): req is AuthenticatedReques
 }
 
 
-
-
-// interface User {
-//   id: number;
-//   email: string;
-//   password?: string;
-//   username: string;
-//   created_at: Date;
-//   google_id?: string;
-//   role: 'employee' | 'manager';
-// }

@@ -1,7 +1,7 @@
 /* General page styles */
 body {
   font-family: Arial, sans-serif;
-  background-image: url(../../../../../../Downloads/ales-krivec-y0i1lh-T0_w-unsplash.jpg);
+  background-image: url(/Users/sarahgarson/Documents/Tempo-web-app/ales-krivec-y0i1lh-T0_w-unsplash.jpg);
   background-size: cover; /* Ensures the image covers the entire viewport */
   background-repeat: no-repeat; /* Prevents the image from repeating */
   background-position: center; /* Centers the image */
@@ -14,9 +14,9 @@ body {
   padding: 2rem;
   max-width: 900px;
   margin: 0 auto;
-  background-color: hsl(0, 0%, 100%, 0.6);
+  /* background-color: hsl(0, 0%, 100%, 0.6); */
   border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
 }
 
 h1 {

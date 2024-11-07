@@ -16,6 +16,8 @@ const EmployeeSchedule: React.FC = () => {
     return firstDayOfWeek;
   });
 
+  const [readySchedule, setReadySchedule] = useState<any>(null);
+
   const numberToDay: Record<number, string> = {
     1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday', 7: 'Sunday'
   };
@@ -157,6 +159,51 @@ const EmployeeSchedule: React.FC = () => {
     );
   };
 
+  //adding the ready schedule page that the manager publishes:
+
+  useEffect(() => {
+    fetchAvailability();
+    fetchReadySchedule();
+  }, [currentWeek]); // This ensures both availability and ready schedule update when week changes
+  
+  
+  // Add this new function to fetch the ready schedule
+  const fetchReadySchedule = async () => {
+    try {
+      const weekString = formatDateToString(currentWeek);
+      const response = await api.get('/schedules/ready-schedule', {
+        params: { week: weekString },
+      });
+      
+      if (response.data && response.data.schedule_data) {
+        const scheduleWithNames = await enrichScheduleWithNames(response.data.schedule_data);
+        setReadySchedule(scheduleWithNames);
+      }
+    } catch (error) {
+      console.log('Ready schedule fetch:', error);
+    }
+  };
+  
+  const enrichScheduleWithNames = async (scheduleData: any) => {
+    const response = await api.get('/schedules/employees');
+    const employees = response.data;
+    const employeeMap = new Map(employees.map((emp: any) => [emp.id, emp.name]));
+  
+    const enrichedSchedule: any = {};
+    Object.entries(scheduleData).forEach(([day, shifts]: [string, any]) => {
+      enrichedSchedule[day] = {};
+      Object.entries(shifts).forEach(([shift, userId]: [string, any]) => {
+        enrichedSchedule[day][shift] = {
+          id: userId,
+          name: employeeMap.get(userId) || '-'
+        };
+      });
+    });
+  
+    return enrichedSchedule;
+  };
+
+
 
   return (
     <div className="employee-schedule">
@@ -193,8 +240,37 @@ const EmployeeSchedule: React.FC = () => {
       <Button variant="contained" color="primary" onClick={() => saveAvailability()} className="save-button">
         Save Availability
       </Button>
-    </div>
-  );
+      {readySchedule && (
+      <div className="ready-schedule-section">
+        <h2>Ready Schedule for the Week</h2>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Day</TableCell>
+                {shifts.map((shift) => (
+                  <TableCell key={shift}>{shift}</TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {days.map((day) => (
+                <TableRow key={day}>
+                  <TableCell>{day}</TableCell>
+                  {shifts.map((shift) => (
+                    <TableCell key={shift}>
+                      {readySchedule[day]?.[shift]?.name || '-'}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </div>
+    )}
+  </div>
+);
 };
 
 export default EmployeeSchedule;

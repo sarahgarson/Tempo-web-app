@@ -451,6 +451,48 @@ function getISOWeek(date: Date) {
 }
 
 
+// Adding this new route handler for the table ready schedule
+router.get('/ready-schedule', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { week } = req.query;
+    const result = await pool.query(
+      `SELECT schedule_data 
+       FROM manager_schedules 
+       WHERE week = $1 
+       AND is_selected = true`,
+      [week]
+    );
+
+    const schedule = result.rows[0]?.schedule_data || null;
+    res.json({ schedule_data: schedule });
+  } catch (error) {
+    console.log('Error fetching ready schedule:', error);
+    res.status(500).json({ message: 'Error fetching ready schedule' });
+  }
+});
+
+router.post('/publish', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const { week, scheduleData } = req.body;
+    
+    await pool.query(
+      `INSERT INTO published_schedules (week, schedule_data)
+       VALUES ($1, $2)
+       ON CONFLICT (week) 
+       DO UPDATE SET schedule_data = $2, updated_at = CURRENT_TIMESTAMP`,
+      [week, scheduleData]
+    );
+
+    res.json({ message: 'Schedule published successfully' });
+  } catch (error) {
+    console.error('Error publishing schedule:', error);
+    res.status(500).json({ message: 'Error publishing schedule' });
+  }
+});
+
+
+
+
 
 
 export default router;

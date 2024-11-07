@@ -1,12 +1,29 @@
+/* General page styles */
+body {
+  font-family: Arial, sans-serif;
+  background-image: url(../../../../../../Downloads/ales-krivec-y0i1lh-T0_w-unsplash.jpg);
+  background-size: cover; /* Ensures the image covers the entire viewport */
+  background-repeat: no-repeat; /* Prevents the image from repeating */
+  background-position: center; /* Centers the image */
+  background-attachment: fixed; /* Prevents the image from scrolling with the page */
+  margin: 0;
+  padding: 0;
+}
+
 .employee-schedule {
   padding: 2rem;
-  background-color: #fff5e6;
+  max-width: 900px;
+  margin: 0 auto;
+  background-color: hsl(0, 0%, 100%, 0.6);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
-  color: #8b4513;
+  color: hsla(158, 30%, 78%, 0.355);
   text-align: center;
   margin-bottom: 2rem;
+  font-size: 2rem;
 }
 
 .week-navigation {
@@ -14,27 +31,85 @@ h1 {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+  background-color: hsla(157, 19%, 38%, 0.228) !important;
+}
+
+.week-navigation button {
+  background-color: #96a8a1 !important;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.week-navigation button:hover {
+  background-color: #4d5e57 !important; 
 }
 
 .save-button {
-  margin-top: 1rem;
-  background-color: #ff4500;
+  margin-top: 3rem;
+  background-color: #81a396 !important;
   color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.save-button:hover {
+  background-color: #4d5e57 !important;
 }
 
 table {
+  width: 100%;
+  border-collapse: collapse;
   background-color: white;
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+th, td {
+  padding: 0.75rem;
+  text-align: center;
+  border-bottom: 1px solid #e0e0e0;
 }
 
 th {
-  background-color: #ffa500;
+  background-color: #81a396 !important;
   color: white;
+  font-weight: bold;
 }
 
 td {
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 td:hover {
-  background-color: #c1d8f3;
+  background-color: hsla(0, 0%, 91%, 0.866);
+}
+
+/* Availability cell styles */
+td div {
+  padding: 8px;
+  border-radius: 4px;
+  /* font-weight: bold; */
+}
+
+td .neutral {
+  background-color: #f0f8ff;
+}
+
+td .cant-work {
+  background-color: hsla(0, 100%, 65%, 0.3) !important;
+}
+
+td .want-work {
+  background-color: rgba(101, 223, 101, 0.2) !important;
 }

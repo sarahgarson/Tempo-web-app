@@ -1,6 +1,13 @@
-body{
-  background-color: hsla(204, 68%, 91%, 0.5);
-} 
+.login-page {
+  background-image: url(../../../../../../Downloads/martin-sanchez-ycG0A6DlvOk-unsplash.jpg);
+  background-size: cover; /* Ensures the image covers the entire viewport */
+  background-repeat: no-repeat; /* Prevents the image from repeating */
+  background-position: center; /* Centers the image */
+  background-attachment: fixed; /* Prevents the image from scrolling with the page */
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
 
 .login-container {
   display: flex;
@@ -8,27 +15,65 @@ body{
   align-items: center;
   justify-content: center;
   height: 100vh;
+  /* background-color: #f0f8ff; */
 }
 
 .login-title {
-  color: #2c3e50;
+  color: #1e2f26;
   margin-bottom: 2rem;
+  font-size: 300% !important;
+  font-weight: bold;
+  text-align: center;
 }
 
 .login-form {
   width: 100%;
+  max-width: 400px;
+  /* background-color: #ffffff; */
+  padding: 1rem;
+  border-radius: 8px;
+  /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
   margin-bottom: 50px;
-  margin-top: 30px;
+}
+
+.login-form .MuiTextField-root {
+  width: 100%;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+  background-color: rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
 }
 
 .login-button {
-  margin-top: 10px;
-  background-color: #4991b6;
+  background-color: #81a396 !important;
+  color: #ffffff ;
+  font-size: 1rem;
+  padding: 0.5rem;
+  width: 100%;
+  margin-top: 1rem;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
 
+.login-button:hover {
+  background-color: #4b6259 !important;
 }
 
 .google-button {
-  margin-top: 20px;
-  background-color: #fff;
-  color: #5585b9;
+  background-color: #81a396 !important;
+  color: #ffffff;
+  font-size: 1rem;
+  padding: 0.5rem;
+  width: 100%;
+  margin-top: 1rem;
+  border: 1px solid #81a396;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.google-button:hover {
+  background-color: #4b6259 !important;
 }

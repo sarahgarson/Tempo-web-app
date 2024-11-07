@@ -58,6 +58,7 @@ const Login: React.FC = () => {
   
   
   return (
+    <div className="login-page">
     <Container maxWidth="xs" className="login-container">
       <Typography variant="h4" className="login-title">Tempo Web Application</Typography>
       <form onSubmit={handleLogin} className="login-form">
@@ -78,13 +79,13 @@ const Login: React.FC = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <Button type="submit" variant="contained" color="primary" fullWidth className="login-button">
+        <Button type="submit" variant="contained" fullWidth className="login-button">
           Login
         </Button>
       </form>
       <Button
         variant="contained"
-        color="secondary"
+        color="primary"
         fullWidth
         startIcon={<GoogleIcon />}
         onClick={handleGoogleLogin}
@@ -93,6 +94,7 @@ const Login: React.FC = () => {
         Login with Google
       </Button>
     </Container>
+  </div>
   );
 };
 

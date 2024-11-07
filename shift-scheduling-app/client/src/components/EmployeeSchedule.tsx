@@ -133,8 +133,8 @@ const EmployeeSchedule: React.FC = () => {
   const getAvailabilityColor = (status: number) => {
     switch (status) {
       case 0: return 'white';
-      case 1: return '#ffcccb'; 
-      case 2: return '#90ee90'; 
+      case 1: return 'hsla(0, 100%, 65%, 0.3)'; 
+      case 2: return 'rgba(101, 223, 101, 0.2)'; 
       default: return 'white';
     }
   };

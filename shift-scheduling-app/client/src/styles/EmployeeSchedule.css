@@ -1,14 +1,14 @@
 /* General page styles */
 body {
-  font-family: Arial, sans-serif;
-  background-image: url(/Users/sarahgarson/Documents/Tempo-web-app/ales-krivec-y0i1lh-T0_w-unsplash.jpg);
-  background-size: cover; /* Ensures the image covers the entire viewport */
-  background-repeat: no-repeat; /* Prevents the image from repeating */
-  background-position: center; /* Centers the image */
-  background-attachment: fixed; /* Prevents the image from scrolling with the page */
+  background-image: url(../../public/images/ales-krivec-y0i1lh-T0_w-unsplash.jpg);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-attachment: fixed;
   margin: 0;
   padding: 0;
 }
+
 
 .employee-schedule {
   padding: 2rem;

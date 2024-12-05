@@ -67,6 +67,8 @@ const ManagerSchedule: React.FC = () => {
 
   const [availabilityList, setAvailabilityList] = useState<AvailabilityList>({}); //added this one to see if it works
 
+  const [managerName, setManagerName] = useState<string>('');  // Add state for manager's name
+
 
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [openPopoverDay, setOpenPopoverDay] = useState<string | null>(null);
@@ -79,7 +81,7 @@ const ManagerSchedule: React.FC = () => {
   const [selectedShift, setSelectedShift] = useState<string | null>(null);
 
   
-
+//these are the arrays that make the organized days and hours, if we chnage the order then they will show in different order in the schedule in the web page as well
   const shifts = ['07:00-16:00', '10:00-19:00', '13:00-22:00'];
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -104,6 +106,21 @@ const ManagerSchedule: React.FC = () => {
   
     fetchData();
   }, [currentWeek]);
+
+  //adding this one to fetch the manager's name for the welcome message page
+  useEffect(() => {
+    // Fetch manager's name from the API or context
+    const fetchManagerDetails = async () => {
+      try {
+        const response = await api.get('/auth/manager-details'); // Replace with your actual endpoint
+        setManagerName(response.data.name); // Assuming the name is in the 'name' field
+      } catch (error) {
+        console.error('Failed to fetch manager details:', error);
+      }
+    };
+
+    fetchManagerDetails();
+  }, []);
 
 //adding this one to see if the dropdown employee in the csustom table works 
 useEffect(() => {
@@ -343,7 +360,9 @@ const getStatusText = (status: number) => {
     
   return (
     <div className="manager-schedule">
-      <h1>Manager Schedule</h1>
+      <h1>
+        Welcome {managerName} to your management page
+      </h1>
       <div className="week-navigation">
   <Button onClick={() => setCurrentWeek(new Date(currentWeek.getTime() - 7 * 24 * 60 * 60 * 1000))}>
     Previous Week
@@ -353,48 +372,7 @@ const getStatusText = (status: number) => {
     Next Week
   </Button>
 </div>
-      <div className="schedule-options">
-        {scheduleOptions.map((option, index) => (
-          <div key={index} className={`schedule-option ${selectedOptionIndex === index ? 'selected' : ''}`} onClick={() => handleOptionSelect(index)}>
-            <h3>Option {renderSafely(option.optionNumber)}</h3>
-            <Button onClick={(e) => { e.stopPropagation(); shuffleSchedule(index); }}>Shuffle</Button>
-            {checkForDuplicateAssignments(option.data) && (
-              <div className="warning">Warning: Unexpected duplicate assignments detected</div>
-            )}
-            <TableContainer component={Paper}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Day</TableCell>
-                    {shifts.map((shift) => (
-                      <TableCell key={shift}>{renderSafely(shift)}</TableCell>
-                    ))}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {days.map((day) => (
-                    <TableRow key={renderSafely(day)}>
-                      <TableCell>{renderSafely(day)}</TableCell>
-                      {shifts.map((shift) => (
-                        <TableCell key={`${renderSafely(day)}-${renderSafely(shift)}`}>
-                          {option.data && option.data[day] && option.data[day][shift] !== undefined ? (
-                            <>
-                              {renderSafely(getEmployeeName(option.data[day][shift]))}
-                              <div className="employee-status">
-                                {renderSafely(getEmployeeStatus(day, shift, option.data[day][shift]))}
-                              </div>
-                            </>
-                          ) : '-'}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </div>
-      ))}
-    </div>
+      
       <div className="custom-schedule">
         <h2>Custom Schedule</h2>
         <TableContainer component={Paper}>
@@ -458,6 +436,50 @@ const getStatusText = (status: number) => {
         ))}
       </List>
       </Popover>
+
+      <div className="schedule-options">
+        {scheduleOptions.map((option, index) => (
+          <div key={index} className={`schedule-option ${selectedOptionIndex === index ? 'selected' : ''}`} onClick={() => handleOptionSelect(index)}>
+            <h3>Option {renderSafely(option.optionNumber)}</h3>
+            <Button onClick={(e) => { e.stopPropagation(); shuffleSchedule(index); }}>Shuffle</Button>
+            {checkForDuplicateAssignments(option.data) && (
+              <div className="warning">Warning: Unexpected duplicate assignments detected</div>
+            )}
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Day</TableCell>
+                    {shifts.map((shift) => (
+                      <TableCell key={shift}>{renderSafely(shift)}</TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {days.map((day) => (
+                    <TableRow key={renderSafely(day)}>
+                      <TableCell>{renderSafely(day)}</TableCell>
+                      {shifts.map((shift) => (
+                        <TableCell key={`${renderSafely(day)}-${renderSafely(shift)}`}>
+                          {option.data && option.data[day] && option.data[day][shift] !== undefined ? (
+                            <>
+                              {renderSafely(getEmployeeName(option.data[day][shift]))}
+                              <div className="employee-status">
+                                {renderSafely(getEmployeeStatus(day, shift, option.data[day][shift]))}
+                              </div>
+                            </>
+                          ) : '-'}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </div>
+      ))}
+    </div>
+
       <div className="employee-availability">
   <h2>Employee Availability</h2>
   {days.map((day) => (

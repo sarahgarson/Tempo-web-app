@@ -1,7 +1,11 @@
+body {
+  font-family: 'Poppins', sans-serif;
+}
+
 .manager-schedule {
   padding: 2rem;
   background-color: #fff5e6;
-  font-family: 'Arial', sans-serif;
+  font-family: 'Poppins', sans-serif;
   max-width: 1200px;
   margin: 0 auto;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
@@ -37,6 +41,7 @@ h1 {
   flex-wrap: wrap;
   justify-content: space-around;
   margin-bottom: 3rem;
+  margin-top: 60px;
 }
 
 .schedule-option {

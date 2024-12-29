@@ -80,10 +80,26 @@ const ManagerSchedule: React.FC = () => {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [selectedShift, setSelectedShift] = useState<string | null>(null);
 
+  // Add these new state variables at the beginning of your component
+const [expandedDay, setExpandedDay] = useState<string | null>(null);
+const [expandedShifts, setExpandedShifts] = useState<{[key: string]: boolean}>({});
+
   
 //these are the arrays that make the organized days and hours, if we chnage the order then they will show in different order in the schedule in the web page as well
   const shifts = ['07:00-16:00', '10:00-19:00', '13:00-22:00'];
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+  // Adding these helper functions for the drop down list of availability in the manager schedule
+const toggleDay = (day: string) => {
+  setExpandedDay(expandedDay === day ? null : day);
+};
+
+const toggleShift = (dayShift: string) => {
+  setExpandedShifts(prev => ({
+    ...prev,
+    [dayShift]: !prev[dayShift]
+  }));
+};
 
 
 //using this one to see if the list of emmployees works
@@ -357,6 +373,59 @@ const getStatusText = (status: number) => {
     return String(value);
   };
 
+  // Replace the existing employee availability section with this new version
+const renderEmployeeAvailability = () => (
+  <div className="employee-availability">
+    <h2>Employee Availability</h2>
+    {days.map((day) => (
+      <div key={day} className="day-dropdown">
+        <div 
+          className="day-header"
+          onClick={() => toggleDay(day)}
+        >
+          <span>{day}</span>
+          <span>{expandedDay === day ? '▼' : '▶'}</span>
+        </div>
+        
+        {expandedDay === day && shifts.map((shift) => (
+          <div key={`${day}-${shift}`} className="shift-dropdown">
+            <div 
+              className="shift-header"
+              onClick={() => toggleShift(`${day}-${shift}`)}
+            >
+              <span>{shift}</span>
+              <span>{expandedShifts[`${day}-${shift}`] ? '▼' : '▶'}</span>
+            </div>
+            
+            {expandedShifts[`${day}-${shift}`] && (
+              <div className="shift-content">
+                <div className="availability-group">
+                  <h5>Preferred</h5>
+                  <div className="availability-list">
+                    {availabilityList[day]?.[shift]?.preferred.map(e => e.name).join(', ') || 'None'}
+                  </div>
+                </div>
+                <div className="availability-group">
+                  <h5>Available</h5>
+                  <div className="availability-list">
+                    {availabilityList[day]?.[shift]?.available.map(e => e.name).join(', ') || 'None'}
+                  </div>
+                </div>
+                <div className="availability-group">
+                  <h5>Can't Work</h5>
+                  <div className="availability-list">
+                    {availabilityList[day]?.[shift]?.cantWork.map(e => e.name).join(', ') || 'None'}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    ))}
+  </div>
+);
+
     
   return (
     <div className="manager-schedule">
@@ -403,11 +472,11 @@ const getStatusText = (status: number) => {
           </TableBody>
         </Table>
       </TableContainer>
-        <Button variant="contained" color="primary" onClick={() => setEditMode(!editMode)}>
+        <Button onClick={() => setEditMode(!editMode)}>
           {editMode ? 'Cancel Edit' : 'Edit Schedule'}
         </Button>
         {editMode && (
-          <Button variant="contained" color="primary" onClick={saveSchedule}>
+          <Button onClick={saveSchedule}>
             Save Custom Schedule
           </Button>
         )}
@@ -442,9 +511,6 @@ const getStatusText = (status: number) => {
           <div key={index} className={`schedule-option ${selectedOptionIndex === index ? 'selected' : ''}`} onClick={() => handleOptionSelect(index)}>
             <h3>Option {renderSafely(option.optionNumber)}</h3>
             <Button onClick={(e) => { e.stopPropagation(); shuffleSchedule(index); }}>Shuffle</Button>
-            {checkForDuplicateAssignments(option.data) && (
-              <div className="warning">Warning: Unexpected duplicate assignments detected</div>
-            )}
             <TableContainer component={Paper}>
               <Table size="small">
                 <TableHead>
@@ -476,25 +542,15 @@ const getStatusText = (status: number) => {
                 </TableBody>
               </Table>
             </TableContainer>
+            {checkForDuplicateAssignments(option.data) && (
+              <div className="warning">Warning: Unexpected duplicate assignments detected</div>
+            )}
           </div>
       ))}
     </div>
 
       <div className="employee-availability">
-  <h2>Employee Availability</h2>
-  {days.map((day) => (
-    <div key={day}>
-      <h3>{day}</h3>
-      {shifts.map((shift) => (
-         <div key={`${day}-${shift}`} className="shift-section">
-         <h4>{shift}</h4>
-         <p>Preferred: {availabilityList[day]?.[shift]?.preferred.map(e => e.name).join(', ') || 'None'}</p>
-         <p>Available: {availabilityList[day]?.[shift]?.available.map(e => e.name).join(', ') || 'None'}</p>
-         <p>Can't work: {availabilityList[day]?.[shift]?.cantWork.map(e => e.name).join(', ') || 'None'}</p>
-       </div>
-      ))}
-    </div>
-  ))}
+  {renderEmployeeAvailability()}
 </div>
     </div>
   );

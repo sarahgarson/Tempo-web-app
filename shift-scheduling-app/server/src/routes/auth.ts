@@ -97,6 +97,33 @@ router.get('/google/callback',
 );
 
 
+// Add this route to your auth.ts
+router.get('/manager-details', authenticateToken, async (req, res) => {
+  try {
+    const userId = (req as any).user.userId;
+    
+    // Query your database for manager details
+    const query = `
+      SELECT id, username, email, role
+      FROM users
+      WHERE id = $1 AND role = 'manager'
+    `;
+    
+    const result = await pool.query(query, [userId]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Manager not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching manager details:', error);
+    res.status(500).json({ message: 'Error fetching manager details' });
+  }
+});
+
+
+
 
 
 export default router;
